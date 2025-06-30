@@ -1,9 +1,20 @@
 [project]
 name = "hyperliquid-mcp-python"
 version = "0.1.0"
-description = "Add your description here"
+description = "HyperLiquid MCP Server with FastMCP - Trading tools and account management"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "fastmcp>=2.9.2",
+    "hyperliquid-python-sdk>=0.15.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    "eth-account>=0.8.0",
 ]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "black>=22.0", "isort>=5.0"]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
