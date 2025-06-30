@@ -128,15 +128,20 @@ async def place_limit_order(
     client_order_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Place a limit order
+    Place a basic limit order (for opening new positions or manual closing)
     
     Args:
         coin: Trading pair (e.g., "BTC", "ETH")
         side: Order side ("buy" or "sell")
-        size: Order size (positive number)
-        price: Limit price
+        size: Number of tokens/coins to trade (NOT dollar value - e.g., 0.1 for 0.1 SOL, not $20)
+        price: Limit price per token (e.g., 150.0 for $150 per SOL)
         reduce_only: Whether order should only reduce existing position
         client_order_id: Optional client order ID (128-bit hex string, e.g. 0x1234567890abcdef1234567890abcdef)
+    
+    IMPORTANT: The 'size' parameter is the NUMBER OF TOKENS, not dollar value. 
+    If user wants "$20 worth of SOL" at $150/SOL, calculate: $20 ÷ $150 = 0.133 SOL
+    
+    Note: For setting take profit/stop loss on existing positions, use set_take_profit_stop_loss instead.
     """
     initialize_service()
     is_buy = side.lower() == "buy"
@@ -149,7 +154,6 @@ async def place_limit_order(
         reduce_only=reduce_only,
         cloid=client_order_id
     )
-
 
 
 @mcp.tool
@@ -165,8 +169,11 @@ async def market_open_position(
     Args:
         coin: Trading pair (e.g., "BTC", "ETH")
         side: Position side ("buy" for long, "sell" for short)
-        size: Position size (positive number)
+        size: Number of tokens/coins to trade (NOT dollar value - e.g., 0.1 for 0.1 SOL, not $20)
         client_order_id: Optional client order ID for tracking
+    
+    IMPORTANT: The 'size' parameter is the NUMBER OF TOKENS, not dollar value.
+    If user wants "$20 worth of SOL" at current price ~$150, calculate: $20 ÷ $150 = 0.133 SOL
     
     Note: This uses HyperLiquid's native market_open method for the best execution.
     """
@@ -215,18 +222,22 @@ async def place_bracket_order(
     client_order_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Place a bracket order with take profit and stop loss using OCO (One-Cancels-Other) orders
+    Place a bracket order for a NEW position (entry + take profit + stop loss in one order)
     
     Args:
         coin: Trading pair (e.g., "BTC", "ETH")
         side: Order side ("buy" or "sell")
-        size: Order size, number of tokens (positive number)
-        entry_price: Entry limit price
-        take_profit_price: Take profit price
-        stop_loss_price: Stop loss price
+        size: Number of tokens/coins to trade (NOT dollar value - e.g., 0.1 for 0.1 SOL, not $20)
+        entry_price: Entry limit price per token
+        take_profit_price: Take profit price per token
+        stop_loss_price: Stop loss price per token
         client_order_id: Optional client order ID (128-bit hex string, e.g. 0x1234567890abcdef1234567890abcdef)
     
-    Note: This uses HyperLiquid's normalTpSl grouping for proper OCO behavior where TP and SL orders cancel each other when one executes.
+    IMPORTANT: The 'size' parameter is the NUMBER OF TOKENS, not dollar value.
+    If user wants "$20 worth of SOL" at $150/SOL, calculate: $20 ÷ $150 = 0.133 SOL
+    
+    Note: This creates a NEW position with TP/SL. For existing positions, use set_take_profit_stop_loss.
+    Uses HyperLiquid's normalTpSl grouping for proper OCO behavior where TP and SL orders cancel each other.
     """
     initialize_service()
     is_buy = side.lower() == "buy"
@@ -373,25 +384,80 @@ async def transfer_between_spot_and_perp(
 
 
 @mcp.tool
-async def set_position_tpsl(
+async def set_take_profit_stop_loss(
     coin: str,
     take_profit_price: Optional[float] = None,
     stop_loss_price: Optional[float] = None,
     position_size: Optional[float] = None
 ) -> Dict[str, Any]:
     """
-    Set take profit and/or stop loss for an existing position using OCO orders
+    Set take profit and/or stop loss orders for an EXISTING position (OCO orders)
     
     Args:
-        coin: Trading pair (e.g., "BTC", "ETH")
-        take_profit_price: Take profit price (optional)
-        stop_loss_price: Stop loss price (optional)
-        position_size: Position size (will auto-detect if not provided)
+        coin: Trading pair (e.g., "BTC", "ETH") - must have an existing position
+        take_profit_price: Take profit price (optional, can set just TP)
+        stop_loss_price: Stop loss price (optional, can set just SL)
+        position_size: Position size (will auto-detect from existing position if not provided)
+    
+    Note: This is for EXISTING positions only. Use place_bracket_order for new positions with TP/SL.
+    The orders will use OCO (One-Cancels-Other) behavior where executing one cancels the other.
     """
     initialize_service()
     return await hyperliquid_service.set_position_tpsl(
         coin=coin,
         tp_px=take_profit_price,
+        sl_px=stop_loss_price,
+        position_size=position_size
+    )
+
+
+@mcp.tool
+async def set_take_profit(
+    coin: str,
+    take_profit_price: float,
+    position_size: Optional[float] = None
+) -> Dict[str, Any]:
+    """
+    Set ONLY a take profit order for an EXISTING position
+    
+    Args:
+        coin: Trading pair (e.g., "BTC", "ETH") - must have an existing position
+        take_profit_price: Take profit price
+        position_size: Position size (will auto-detect from existing position if not provided)
+    
+    Note: This is specifically for setting ONLY take profit on EXISTING positions.
+    Use set_take_profit_stop_loss if you want both TP and SL, or place_bracket_order for new positions.
+    """
+    initialize_service()
+    return await hyperliquid_service.set_position_tpsl(
+        coin=coin,
+        tp_px=take_profit_price,
+        sl_px=None,
+        position_size=position_size
+    )
+
+
+@mcp.tool
+async def set_stop_loss(
+    coin: str,
+    stop_loss_price: float,
+    position_size: Optional[float] = None
+) -> Dict[str, Any]:
+    """
+    Set ONLY a stop loss order for an EXISTING position
+    
+    Args:
+        coin: Trading pair (e.g., "BTC", "ETH") - must have an existing position  
+        stop_loss_price: Stop loss price
+        position_size: Position size (will auto-detect from existing position if not provided)
+    
+    Note: This is specifically for setting ONLY stop loss on EXISTING positions.
+    Use set_take_profit_stop_loss if you want both TP and SL, or place_bracket_order for new positions.
+    """
+    initialize_service()
+    return await hyperliquid_service.set_position_tpsl(
+        coin=coin,
+        tp_px=None,
         sl_px=stop_loss_price,
         position_size=position_size
     )
@@ -448,6 +514,55 @@ async def close_position(coin: str, percentage: float = 100.0) -> Dict[str, Any]
                     f"HyperLiquid's market_close closes ALL positions. "
                     f"Use limit orders for partial closure or set percentage=100 for full closure."
         }
+
+
+@mcp.tool
+async def calculate_token_amount_from_dollars(
+    coin: str,
+    dollar_amount: float
+) -> Dict[str, Any]:
+    """
+    Calculate how many tokens can be bought with a given dollar amount
+    
+    Args:
+        coin: Trading pair (e.g., "BTC", "ETH", "SOL")
+        dollar_amount: Dollar amount to spend (e.g., 20.0 for $20)
+        
+    Returns:
+        Dictionary with token amount and current price
+        
+    Example: calculate_token_amount_from_dollars("SOL", 20.0) 
+             → {"token_amount": 0.133, "current_price": 150.0, "dollar_amount": 20.0}
+    """
+    initialize_service()
+    
+    # Get current market price
+    market_data = await hyperliquid_service.get_market_data(coin)
+    
+    if not market_data.get("success"):
+        return {
+            "success": False,
+            "error": f"Failed to get market data for {coin}: {market_data.get('error', 'Unknown error')}"
+        }
+    
+    current_price = market_data["market_data"]["mid_price"]
+    if current_price == "N/A":
+        return {
+            "success": False,
+            "error": f"Could not get current price for {coin}"
+        }
+    
+    current_price = float(current_price)
+    token_amount = dollar_amount / current_price
+    
+    return {
+        "success": True,
+        "coin": coin,
+        "dollar_amount": dollar_amount,
+        "current_price": current_price,
+        "token_amount": round(token_amount, 8),  # Round to 8 decimal places
+        "calculation": f"${dollar_amount} ÷ ${current_price} = {token_amount:.8f} {coin}"
+    }
 
 
 if __name__ == "__main__":

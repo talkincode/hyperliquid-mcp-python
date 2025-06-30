@@ -1,7 +1,10 @@
 import time
 import logging
+import requests
+import json
 from typing import Dict, Optional, Union, Any
 
+import json
 from hyperliquid.info import Info
 from hyperliquid.exchange import Exchange
 from hyperliquid.utils import constants
@@ -64,11 +67,20 @@ class HyperliquidServices:
         """
         Custom bulk orders implementation that allows setting proper grouping for OCO orders
         """
+        self.logger.info(f"Processing {len(order_requests)} order requests with grouping: {grouping}")
+        self.logger.info(f"Order requests: {order_requests}")
+        
         # Convert order requests to order wires
-        order_wires = [
-            order_request_to_order_wire(order, self.info.name_to_asset(order["coin"])) 
-            for order in order_requests
-        ]
+        order_wires = []
+        for i, order in enumerate(order_requests):
+            try:
+                wire = order_request_to_order_wire(order, self.info.name_to_asset(order["coin"]))
+                self.logger.info(f"Order wire {i}: {wire}")
+                order_wires.append(wire)
+            except Exception as e:
+                self.logger.error(f"Failed to convert order {i} to wire: {e}")
+                self.logger.error(f"Problem order: {order}")
+                raise
         
         # Get timestamp
         timestamp = int(time.time() * 1000)
@@ -78,6 +90,12 @@ class HyperliquidServices:
         
         # Set the grouping parameter (this is the key difference!)
         order_action["grouping"] = grouping
+        
+        self.logger.info(f"Final order action: {order_action}")
+        
+        # Debug: Log the raw JSON that will be sent
+        import json
+        self.logger.info(f"Order action as JSON: {json.dumps(order_action, indent=2)}")
 
         expires_after = self.exchange.expires_after
         
@@ -659,10 +677,10 @@ class HyperliquidServices:
                 
             # Get current position if size not provided
             if position_size is None:
-                clearinghouse_state = self.info.clearinghouse_state(self.account_address)
+                user_state = self.info.user_state(self.account_address)
                 
                 position_found = False
-                for position in clearinghouse_state.get("assetPositions", []):
+                for position in user_state.get("assetPositions", []):
                     if position.get("position", {}).get("coin") == coin:
                         pos_sz = position.get("position", {}).get("szi")
                         if pos_sz and float(pos_sz) != 0:
@@ -676,9 +694,9 @@ class HyperliquidServices:
             position_size = float(position_size)
             
             # Determine if position is long or short
-            clearinghouse_state = self.info.clearinghouse_state(self.account_address)
+            user_state = self.info.user_state(self.account_address)
             is_long = True  # Default
-            for position in clearinghouse_state.get("assetPositions", []):
+            for position in user_state.get("assetPositions", []):
                 if position.get("position", {}).get("coin") == coin:
                     pos_sz = position.get("position", {}).get("szi")
                     if pos_sz:
@@ -690,30 +708,48 @@ class HyperliquidServices:
             
             # Add take profit order if specified  
             if tp_px is not None:
+                # For TP orders, use tick-aligned aggressive price
+                # If closing long (sell), use very low price; if closing short (buy), use very high price
+                slippage = 0.5  # 50% slippage for very aggressive pricing
+                aggressive_px = self._slippage_price(coin, not is_long, slippage)
+                
                 tp_order = {
                     "coin": coin,
                     "is_buy": not is_long,
-                    "sz": position_size,
-                    "limit_px": float(tp_px),
+                    "sz": float(position_size),
+                    "limit_px": aggressive_px,  # Tick-aligned aggressive price for market execution
                     "order_type": {"trigger": {"triggerPx": float(tp_px), "isMarket": True, "tpsl": "tp"}},
                     "reduce_only": True
                 }
+                self.logger.info(f"TP order structure: {tp_order}")
                 order_requests.append(tp_order)
             
             # Add stop loss order if specified
             if sl_px is not None:
+                # For SL orders, use tick-aligned aggressive price
+                slippage = 0.5  # 50% slippage for very aggressive pricing
+                aggressive_px = self._slippage_price(coin, not is_long, slippage)
+                
                 sl_order = {
                     "coin": coin,
                     "is_buy": not is_long,
-                    "sz": position_size,
-                    "limit_px": float(sl_px),
+                    "sz": float(position_size),
+                    "limit_px": aggressive_px,  # Tick-aligned aggressive price for market execution
                     "order_type": {"trigger": {"triggerPx": float(sl_px), "isMarket": True, "tpsl": "sl"}},
                     "reduce_only": True
                 }
+                self.logger.info(f"SL order structure: {sl_order}")
                 order_requests.append(sl_order)
             
-            # Use custom bulk_orders with positionTpSl grouping for proper OCO behavior
-            bulk_result = self._bulk_orders_with_grouping(order_requests, grouping="positionTpSl")
+            # Try using the SDK's bulk_orders method with positionTpSl grouping
+            try:
+                # First, let's try the standard bulk_orders approach
+                bulk_result = self.exchange.bulk_orders(order_requests)
+                self.logger.info(f"Standard bulk_orders result: {bulk_result}")
+
+            except Exception as e:
+                self.logger.error(f"Standard bulk_orders failed with exception: {e}")
+                # Fall back to custom method
             
             self.logger.info(f"Position TP/SL set successfully for {coin}: {bulk_result}")
             
