@@ -1,10 +1,7 @@
 import time
 import logging
-import requests
-import json
 from typing import Dict, Optional, Union, Any
 
-import json
 from hyperliquid.info import Info
 from hyperliquid.exchange import Exchange
 from hyperliquid.utils import constants
@@ -14,7 +11,6 @@ from hyperliquid.utils.signing import (
     order_wires_to_order_action,
     sign_l1_action
 )
-
 
 class HyperliquidServices:
     """Comprehensive HyperLiquid services for trading and account management"""
@@ -324,6 +320,7 @@ class HyperliquidServices:
             order_requests.append(sl_order)
             
             # Use custom bulk_orders with normalTpsl grouping for proper OCO behavior
+            # Note: Standard SDK bulk_orders doesn't set grouping parameter correctly for OCO
             bulk_result = self._bulk_orders_with_grouping(order_requests, grouping="normalTpsl")
             
             self.logger.info(f"Bracket order placed successfully with OCO grouping: {bulk_result}")
