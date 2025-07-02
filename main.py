@@ -2,6 +2,7 @@ import os
 import json
 import logging
 from typing import Dict, Any, Optional
+import asyncio
 
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field
@@ -565,6 +566,16 @@ async def calculate_token_amount_from_dollars(
     }
 
 
+async def run_as_server():
+    await mcp.run_async(
+        transport="http", 
+        host="127.0.0.1",
+        port=8080,
+    )
+
+def run_standard_server():
+    mcp.run()
+
 if __name__ == "__main__":
     try:
         config = get_config()
@@ -576,7 +587,8 @@ if __name__ == "__main__":
         log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'hyperliquid_mcp.log')
         logger.info(f"Logs will be written to: {log_path}")
         
-        mcp.run()
+        # run_standard_server()
+        asyncio.run(run_standard_server())
     except Exception as e:
         logger.error(f"Failed to start server: {e}")
         print(f"Failed to start server: {e}")
