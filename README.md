@@ -38,21 +38,21 @@ A comprehensive Model Context Protocol (MCP) server for HyperLiquid trading usin
 ### Prerequisites
 
 - Python 3.11 or higher (project uses Python 3.13)
-- [UV](https://docs.astral.sh/uv/) package manager
+- [Poetry](https://python-poetry.org/) package manager
 
 ### Setup
 
-1. **Install UV (if not already installed):**
+1. **Install Poetry (if not already installed):**
 
    ```bash
    # On macOS and Linux:
-   curl -LsSf https://astral.sh/uv/install.sh | sh
+   curl -sSL https://install.python-poetry.org | python3 -
 
    # On Windows:
-   powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+   (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -
 
    # Or with pip:
-   pip install uv
+   pip install poetry
    ```
 
 2. **Clone the repository:**
@@ -62,23 +62,23 @@ A comprehensive Model Context Protocol (MCP) server for HyperLiquid trading usin
    cd hyperliquid-mcp-python
    ```
 
-3. **Install dependencies with UV:**
+3. **Install dependencies with Poetry:**
 
    ```bash
    # Install dependencies and create virtual environment
-   uv sync
+   poetry install
 
-   # Or install in development mode with optional dev dependencies
-   uv sync --extra dev
+   # Or install without development dependencies
+   poetry install --without dev
    ```
 
    This will install all dependencies defined in `pyproject.toml`:
 
-   - `fastmcp>=2.9.2` - FastMCP framework for MCP server
-   - `hyperliquid-python-sdk>=0.15.0` - Official HyperLiquid SDK
-   - `python-dotenv>=1.0.0` - Environment variable loading
-   - `pydantic>=2.0.0` - Data validation
-   - `eth-account>=0.8.0` - Ethereum account handling
+   - `fastmcp^2.9.2` - FastMCP framework for MCP server
+   - `hyperliquid-python-sdk^0.15.0` - Official HyperLiquid SDK
+   - `python-dotenv^1.0.0` - Environment variable loading
+   - `pydantic^2.0.0` - Data validation
+   - `eth-account^0.10.0` - Ethereum account handling
 
 ## Configuration
 
@@ -127,11 +127,11 @@ Create a `config.json` file in the project root:
 ### Starting the Server
 
 ```bash
-# Using UV (recommended)
-uv run python main.py
+# Using Poetry (recommended)
+poetry run python main.py
 
 # Or activate the virtual environment first
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+poetry shell
 python main.py
 ```
 

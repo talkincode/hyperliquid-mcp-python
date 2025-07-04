@@ -588,7 +588,7 @@ if __name__ == "__main__":
         logger.info(f"Logs will be written to: {log_path}")
         
         # run_standard_server()
-        asyncio.run(run_standard_server())
+        asyncio.run(run_as_server())
     except Exception as e:
         logger.error(f"Failed to start server: {e}")
         print(f"Failed to start server: {e}")
