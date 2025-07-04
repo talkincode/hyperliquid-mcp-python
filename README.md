@@ -126,8 +126,26 @@ Create a `config.json` file in the project root:
 
 ### Starting the Server
 
+The server can be started in two modes:
+
+#### HTTP Server Mode (Recommended)
+
 ```bash
-# Using Poetry (recommended)
+# Start HTTP server on http://127.0.0.1:8080
+poetry start
+```
+
+#### Stdio Mode (For MCP Client Integration)
+
+```bash
+# Start stdio server for MCP client connections
+poetry stdio
+```
+
+#### Alternative: Manual Startup
+
+```bash
+# Using Poetry (manual method)
 poetry run python main.py
 
 # Or activate the virtual environment first

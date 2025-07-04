@@ -576,6 +576,62 @@ async def run_as_server():
 def run_standard_server():
     mcp.run()
 
+def start_server():
+    """Entry point for 'poetry start' command - runs HTTP server"""
+    try:
+        config = get_config()
+        logger.info("HyperLiquid MCP Server starting...")
+        network = "Testnet" if config.testnet else "Mainnet"
+        logger.info(f"Network: {network}")
+        account_display = config.account_address or "Will be derived from private key"
+        logger.info(f"Account: {account_display}")
+        log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'hyperliquid_mcp.log')
+        logger.info(f"Logs will be written to: {log_path}")
+        
+        asyncio.run(run_as_server())
+    except Exception as e:
+        logger.error(f"Failed to start server: {e}")
+        print(f"Failed to start server: {e}")
+        print("\nTo configure the server:")
+        print("1. Set environment variables:")
+        print("   export HYPERLIQUID_PRIVATE_KEY='your_private_key'")
+        print("   export HYPERLIQUID_TESTNET='false'  # or 'true' for testnet")
+        print("   export HYPERLIQUID_ACCOUNT_ADDRESS='your_address'  # optional")
+        print("\n2. Or create a config.json file:")
+        print('   {"private_key": "your_private_key", "testnet": false, "account_address": "your_address"}')
+        print("\n3. Or create a .env file:")
+        print("   HYPERLIQUID_PRIVATE_KEY=your_private_key")
+        print("   HYPERLIQUID_TESTNET=false")
+        print("   HYPERLIQUID_ACCOUNT_ADDRESS=your_address")
+
+def stdio_server():
+    """Entry point for 'poetry stdio' command - runs stdio server"""
+    try:
+        config = get_config()
+        logger.info("HyperLiquid MCP Server starting in stdio mode...")
+        network = "Testnet" if config.testnet else "Mainnet"
+        logger.info(f"Network: {network}")
+        account_display = config.account_address or "Will be derived from private key"
+        logger.info(f"Account: {account_display}")
+        log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'hyperliquid_mcp.log')
+        logger.info(f"Logs will be written to: {log_path}")
+        
+        run_standard_server()
+    except Exception as e:
+        logger.error(f"Failed to start stdio server: {e}")
+        print(f"Failed to start stdio server: {e}")
+        print("\nTo configure the server:")
+        print("1. Set environment variables:")
+        print("   export HYPERLIQUID_PRIVATE_KEY='your_private_key'")
+        print("   export HYPERLIQUID_TESTNET='false'  # or 'true' for testnet")
+        print("   export HYPERLIQUID_ACCOUNT_ADDRESS='your_address'  # optional")
+        print("\n2. Or create a config.json file:")
+        print('   {"private_key": "your_private_key", "testnet": false, "account_address": "your_address"}')
+        print("\n3. Or create a .env file:")
+        print("   HYPERLIQUID_PRIVATE_KEY=your_private_key")
+        print("   HYPERLIQUID_TESTNET=false")
+        print("   HYPERLIQUID_ACCOUNT_ADDRESS=your_address")
+
 if __name__ == "__main__":
     try:
         config = get_config()

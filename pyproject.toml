@@ -6,6 +6,10 @@ authors = ["Gigabrain <chetan@gigabrain.gg>"]
 readme = "README.md"
 packages = [{ include = "services" }]
 
+[tool.poetry.scripts]
+start = "main:start_server"
+stdio = "main:stdio_server"
+
 [tool.poetry.dependencies]
 python = "^3.11"
 fastmcp = "^2.9.2"
