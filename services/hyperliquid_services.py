@@ -156,16 +156,16 @@ class HyperliquidServices:
             formatted_orders = []
             for order in open_orders:
                 formatted_orders.append({
-                    "order_id": order["oid"],
-                    "coin": order["coin"],
-                    "side": "buy" if order["side"] == "B" else "sell",
-                    "size": order["sz"],
-                    "limit_price": order["limitPx"],
-                    "reduce_only": order["reduceOnly"],
-                    "order_type": order.get("orderType", "unknown"),
-                    "timestamp": order["timestamp"],
-                    "cloid": order.get("cloid")
-                })
+                "order_id": order["oid"],
+                "coin": order["coin"],
+                "side": "buy" if order["side"] == "B" else "sell",
+                "size": order["sz"],
+                "limit_price": order["limitPx"],
+                "reduce_only": order.get("reduceOnly", False),
+                "order_type": order.get("orderType", "unknown"),
+                "timestamp": order["timestamp"],
+                "cloid": order.get("cloid")
+            })
             
             return {
                 "success": True,
