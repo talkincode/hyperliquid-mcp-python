@@ -35,41 +35,57 @@
 
 ## 快速开始
 
-### 方式 1: 无需安装直接试用 (uvx)
+### 方式 1：使用 uvx（推荐）🚀
+
+**最简单的方式** - 无需安装，直接运行：
 
 ```bash
-# 设置配置
-export HYPERLIQUID_PRIVATE_KEY="0x..."
-export HYPERLIQUID_TESTNET="true"  # 先用测试网！
+# 查看帮助
+uvx --python 3.13 --from hyperliquid-mcp-python hyperliquid-mcp --help
 
-# 直接从 GitHub 运行
-uvx --from git+https://github.com/jamiesun/hyperliquid-mcp.git hyperliquid-mcp
+# 启动 HTTP 服务器
+uvx --python 3.13 --from hyperliquid-mcp-python hyperliquid-mcp start
+
+# 启动 stdio 服务器（用于 MCP 客户端）
+uvx --python 3.13 --from hyperliquid-mcp-python hyperliquid-mcp stdio
 ```
 
-### 方式 2: 本地开发
+> **为什么要指定 `--python 3.13`?**  
+> 依赖包 `ckzg` 目前只提供到 Python 3.13 的预编译包，Python 3.14 还不支持。指定版本可以避免编译错误。
+
+### 方式 2：本地开发安装
 
 ```bash
-# 安装 uv（如需要）
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# 克隆并设置
-git clone <repository-url>
+# 克隆仓库
+git clone https://github.com/jamiesun/hyperliquid-mcp.git
 cd hyperliquid-mcp
+
+# 安装依赖（uv 会自动处理编译）
 uv sync
 
-# 配置（复制并编辑 .env.example 为 .env）
-cp .env.example .env
+# 配置
+cp .env.example .env  # 然后编辑 .env 文件
+# 或设置环境变量
+export HYPERLIQUID_PRIVATE_KEY="0x..."
+export HYPERLIQUID_TESTNET="true"  # 强烈建议先用测试网！
 
 # 运行
-uv run hyperliquid-mcp
+uv run hyperliquid-mcp              # HTTP 模式（默认 127.0.0.1:8080）
+uv run hyperliquid-mcp stdio        # stdio 模式（用于 MCP 客户端）
+uv run hyperliquid-mcp --help       # 查看帮助
 ```
 
-### 方式 3: 全局安装
+### 方式 3：pip 安装（需要 Python 3.10-3.13）
 
 ```bash
-uv pip install git+https://github.com/jamiesun/hyperliquid-mcp.git
-hyperliquid-mcp
+# 使用 pip（需要 Python 3.10-3.13）
+pip install hyperliquid-mcp-python
+
+# 运行
+hyperliquid-mcp --help
 ```
+
+> **注意**: 包要求 Python 3.10-3.13。Python 3.14 还不支持。
 
 ## 配置
 
@@ -85,28 +101,51 @@ HYPERLIQUID_ACCOUNT_ADDRESS=   # 可选，自动从私钥派生
 ## 使用方法
 
 ```bash
+# 已安装的包（推荐）
+hyperliquid-mcp                # HTTP 服务器（默认）
+hyperliquid-mcp stdio          # stdio 模式（用于 MCP 客户端）
+hyperliquid-mcp --help         # 显示帮助
+
 # 本地开发
-uv run hyperliquid-mcp              # HTTP 服务器（默认）
-uv run hyperliquid-mcp stdio        # stdio 模式（用于 MCP 客户端）
-uv run hyperliquid-mcp --help       # 显示帮助
-
-# 远程执行（无需安装）
-uvx --from git+https://github.com/jamiesun/hyperliquid-mcp.git hyperliquid-mcp
-
-# 全局安装后
-hyperliquid-mcp
+uv run hyperliquid-mcp
+uv run hyperliquid-mcp stdio
 ```
 
 ### MCP 客户端集成 (Claude Desktop)
 
 添加到 `~/Library/Application Support/Claude/claude_desktop_config.json`：
 
+**推荐配置（本地安装）**
+
 ```json
 {
   "mcpServers": {
     "hyperliquid": {
       "command": "uv",
-      "args": ["--directory", "/path/to/hyperliquid-mcp", "run", "hyperliquid-mcp", "stdio"],
+      "args": [
+        "--directory",
+        "/path/to/hyperliquid-mcp",
+        "run",
+        "hyperliquid-mcp",
+        "stdio"
+      ],
+      "env": {
+        "HYPERLIQUID_PRIVATE_KEY": "0x...",
+        "HYPERLIQUID_TESTNET": "true"
+      }
+    }
+  }
+}
+```
+
+**如果全局安装成功**
+
+```json
+{
+  "mcpServers": {
+    "hyperliquid": {
+      "command": "hyperliquid-mcp",
+      "args": ["stdio"],
       "env": {
         "HYPERLIQUID_PRIVATE_KEY": "0x...",
         "HYPERLIQUID_TESTNET": "true"

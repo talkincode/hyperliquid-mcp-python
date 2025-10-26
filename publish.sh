@@ -15,15 +15,15 @@ fi
 
 # 1. 清理旧的构建文件
 echo "🧹 清理旧的构建文件..."
-rm -rf dist/ build/ *.egg-info
+rm -rf dist/ build/ *.egg-info 2>/dev/null || true
 
 # 2. 构建包
 echo "📦 构建分发包..."
-uv build
+uv run python -m build
 
 # 3. 检查构建产物
 echo "✅ 检查包的完整性..."
-twine check dist/*
+uv run twine check dist/*
 
 echo ""
 echo "构建完成！以下是构建的文件："
@@ -42,7 +42,7 @@ case $choice in
         echo "📤 上传到测试 PyPI..."
         echo "用户名: __token__"
         echo "密码: 粘贴你的测试 PyPI token"
-        twine upload --repository testpypi dist/*
+        uv run twine upload --repository testpypi dist/*
         echo ""
         echo "✅ 上传成功！"
         echo "测试安装命令："
@@ -53,7 +53,7 @@ case $choice in
         echo "📤 上传到正式 PyPI..."
         echo "用户名: __token__"
         echo "密码: 粘贴你的正式 PyPI token"
-        twine upload dist/*
+        uv run twine upload dist/*
         echo ""
         echo "✅ 上传成功！"
         echo "安装命令："

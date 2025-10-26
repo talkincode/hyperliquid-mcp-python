@@ -48,7 +48,7 @@ def main():
     parser.add_argument(
         '--version',
         action='version',
-        version='HyperLiquid MCP v0.1.0'
+        version='HyperLiquid MCP v0.1.3'
     )
     
     args = parser.parse_args()
