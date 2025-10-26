@@ -26,10 +26,10 @@ echo '{"private_key": "0x...", "testnet": true}' > config.json
 2. **启动服务器**：
 ```bash
 # HTTP模式（推荐）
-poetry start
+uv run start
 
 # Stdio模式（MCP客户端）
-poetry stdio
+uv run stdio
 ```
 
 ## 核心工具使用指南

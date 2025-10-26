@@ -1,28 +1,41 @@
-[tool.poetry]
+[project]
 name = "hyperliquid-mcp-python"
 version = "0.1.0"
 description = "HyperLiquid MCP Server with FastMCP - Trading tools and account management"
-authors = ["Gigabrain <chetan@gigabrain.gg>"]
+authors = [
+    {name = "Gigabrain", email = "chetan@gigabrain.gg"}
+]
 readme = "README.md"
-packages = [{ include = "services" }]
+requires-python = ">=3.11"
+dependencies = [
+    "fastmcp>=2.9.2",
+    "hyperliquid-python-sdk>=0.15.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    "eth-account>=0.10.0",
+]
 
-[tool.poetry.scripts]
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "black>=22.0",
+    "isort>=5.0",
+]
+
+[project.scripts]
 start = "main:start_server"
 stdio = "main:stdio_server"
 
-[tool.poetry.dependencies]
-python = "^3.11"
-fastmcp = "^2.9.2"
-hyperliquid-python-sdk = "^0.15.0"
-python-dotenv = "^1.0.0"
-pydantic = "^2.0.0"
-eth-account = "^0.10.0"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.0"
-black = "^22.0"
-isort = "^5.0"
-
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["services"]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0",
+    "black>=22.0",
+    "isort>=5.0",
+]

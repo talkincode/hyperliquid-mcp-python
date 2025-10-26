@@ -38,21 +38,21 @@ A comprehensive Model Context Protocol (MCP) server for HyperLiquid trading usin
 ### Prerequisites
 
 - Python 3.11 or higher (project uses Python 3.13)
-- [Poetry](https://python-poetry.org/) package manager
+- [uv](https://docs.astral.sh/uv/) package manager
 
 ### Setup
 
-1. **Install Poetry (if not already installed):**
+1. **Install uv (if not already installed):**
 
    ```bash
    # On macOS and Linux:
-   curl -sSL https://install.python-poetry.org | python3 -
+   curl -LsSf https://astral.sh/uv/install.sh | sh
 
    # On Windows:
-   (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -
+   powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 
    # Or with pip:
-   pip install poetry
+   pip install uv
    ```
 
 2. **Clone the repository:**
@@ -62,14 +62,14 @@ A comprehensive Model Context Protocol (MCP) server for HyperLiquid trading usin
    cd hyperliquid-mcp-python
    ```
 
-3. **Install dependencies with Poetry:**
+3. **Install dependencies with uv:**
 
    ```bash
    # Install dependencies and create virtual environment
-   poetry install
+   uv sync
 
    # Or install without development dependencies
-   poetry install --without dev
+   uv sync --no-dev
    ```
 
    This will install all dependencies defined in `pyproject.toml`:
@@ -132,24 +132,26 @@ The server can be started in two modes:
 
 ```bash
 # Start HTTP server on http://127.0.0.1:8080
-poetry start
+uv run start
 ```
 
 #### Stdio Mode (For MCP Client Integration)
 
 ```bash
 # Start stdio server for MCP client connections
-poetry stdio
+uv run stdio
 ```
 
 #### Alternative: Manual Startup
 
 ```bash
-# Using Poetry (manual method)
-poetry run python main.py
+# Using uv (manual method)
+uv run python main.py
 
 # Or activate the virtual environment first
-poetry shell
+source .venv/bin/activate  # On Unix/macOS
+# or
+.venv\Scripts\activate     # On Windows
 python main.py
 ```
 

@@ -86,11 +86,11 @@ def initialize_service():
 ## 开发工作流
 
 ### 依赖管理
-使用 **Poetry** 进行依赖管理：
-- `poetry install` - 安装依赖
-- `poetry start` - HTTP服务器模式（生产环境）
-- `poetry stdio` - stdio模式（MCP客户端集成）
-- `poetry run python main.py` - 直接执行
+使用 **uv** 进行依赖管理：
+- `uv sync` - 安装依赖
+- `uv run start` - HTTP服务器模式（生产环境）
+- `uv run stdio` - stdio模式（MCP客户端集成）
+- `uv run python main.py` - 直接执行
 
 ### 服务器模式
 1. **HTTP模式**: `start_server()` → 运行在 `127.0.0.1:8080`
