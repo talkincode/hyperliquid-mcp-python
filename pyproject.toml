@@ -6,7 +6,19 @@ authors = [
     {name = "Gigabrain", email = "chetan@gigabrain.gg"}
 ]
 readme = "README.md"
+license = {text = "MIT"}
 requires-python = ">=3.11"
+keywords = ["hyperliquid", "mcp", "trading", "fastmcp", "ai", "crypto", "perpetuals"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Office/Business :: Financial",
+]
 dependencies = [
     "fastmcp>=2.9.2",
     "hyperliquid-python-sdk>=0.15.0",
@@ -14,6 +26,12 @@ dependencies = [
     "pydantic>=2.0.0",
     "eth-account>=0.10.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/jamiesun/hyperliquid-mcp"
+Repository = "https://github.com/jamiesun/hyperliquid-mcp"
+Documentation = "https://github.com/jamiesun/hyperliquid-mcp#readme"
+"Bug Tracker" = "https://github.com/jamiesun/hyperliquid-mcp/issues"
 
 [project.optional-dependencies]
 dev = [
