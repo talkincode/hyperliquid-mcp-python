@@ -23,6 +23,7 @@ dev = [
 ]
 
 [project.scripts]
+hyperliquid-mcp = "cli:main"
 start = "main:start_server"
 stdio = "main:stdio_server"
 
@@ -32,6 +33,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["services"]
+py-modules = ["main", "cli"]
 
 [dependency-groups]
 dev = [
