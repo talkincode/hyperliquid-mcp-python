@@ -98,7 +98,32 @@ HYPERLIQUID_ACCOUNT_ADDRESS=   # 可选，自动从私钥派生
 ```
 
 ⚠️ **安全提示**：绝不提交 `.env` 文件。先用测试网。建议使用 API 钱包 https://app.hyperliquid.xyz/API
+
 ## 使用方法
+
+### 方式 1：使用 Makefile（推荐）⭐
+
+```bash
+# 查看所有可用命令
+make help
+
+# 安装依赖
+make install
+
+# 查看配置
+make config
+
+# 快速验证（连接+余额+地址）
+make test-quick
+
+# 启动 HTTP 服务器
+make run-http
+
+# 启动 stdio 服务器（用于 MCP 客户端）
+make run-stdio
+```
+
+### 方式 2：直接使用命令
 
 ```bash
 # 已安装的包（推荐）
@@ -232,12 +257,61 @@ transfer_between_spot_and_perp(5000, True)
 
 日志写入 `hyperliquid_mcp.log`。
 
+## 测试工具
+
+项目包含一套完整的测试脚本，帮助你验证配置和快速上手。
+
+### 使用 Makefile（推荐）⭐
+
+```bash
+# 运行所有只读测试
+make test-all
+
+# 快速验证
+make test-quick
+
+# 运行特定测试
+make test-market      # 市场数据测试
+make test-account     # 账户信息测试
+make test-balance     # 余额检查
+make test-orderbook   # 订单簿测试
+make test-funding     # 资金费率历史
+make test-calculator  # 价格计算器
+make test-address     # 地址验证
+
+# 列出所有可用测试
+make list-tests
+
+# 查看测试帮助
+make test-help
+```
+
+### 手动运行测试
+
+```bash
+# 基础连接测试
+uv run python test_scripts/test_connection.py
+
+# 检查所有账户余额（现货 + 合约）
+uv run python test_scripts/check_all_balances.py
+
+# 交互式测试工具（推荐）⭐
+uv run python test_scripts/interactive_test.py
+
+# 或使用测试套件脚本
+./test_scripts/run_tests.sh all
+```
+
+更多测试工具和详细说明，请查看 [test_scripts/README.md](test_scripts/README.md)
+
 ## 故障排除
 
 - **Size 参数**：使用代币数量，不是美元。用 `calculate_token_amount_from_dollars()` 转换
 - **客户端订单 ID**：必须是 128 位十六进制字符串（如 `0x1234...`）
 - **未找到仓位**：设置止盈止损前确保仓位存在
 - **网络**：先用测试网：`HYPERLIQUID_TESTNET=true`
+- **余额为 0**：运行 `uv run python test_scripts/check_address.py` 验证地址配置
+- **API 钱包**：如使用 API 钱包，需在 `.env` 中设置 `HYPERLIQUID_ACCOUNT_ADDRESS` 为主账号地址
 
 ## 相关链接
 
