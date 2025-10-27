@@ -224,7 +224,8 @@ update_leverage("BTC", 10, cross_margin=True)
 ```
 
 ⚠️ **重要**：`size` 参数是**代币数量**，不是美元金额！
-- ✅ 正确：`market_open_position("SOL", "buy", 0.133)`  # 0.133 个 SOL 代币
+
+- ✅ 正确：`market_open_position("SOL", "buy", 0.133)` # 0.133 个 SOL 代币
 - ❌ 错误：`market_open_position("SOL", "buy", 20.0)` 误以为是 $20
 
 使用 `calculate_token_amount_from_dollars()` 将美元转换为代币数量。
