@@ -1,5 +1,10 @@
 # HyperLiquid MCP Server
 
+[![CI](https://github.com/talkincode/hyperliquid-mcp-python/actions/workflows/ci.yml/badge.svg)](https://github.com/talkincode/hyperliquid-mcp-python/actions/workflows/ci.yml)
+[![PyPI version](https://badge.fury.io/py/hyperliquid-mcp-python.svg)](https://badge.fury.io/py/hyperliquid-mcp-python)
+[![Python Versions](https://img.shields.io/pypi/pyversions/hyperliquid-mcp-python.svg)](https://pypi.org/project/hyperliquid-mcp-python/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 基于 FastMCP 的 HyperLiquid 交易 MCP 服务器。为 AI 助手提供与 HyperLiquid 永续合约和现货交易平台交互的工具。
 
 > **致谢**: 本项目 Fork 自 [GigabrainGG/hyperliquid-mcp](https://github.com/GigabrainGG/hyperliquid-mcp)，感谢原作者的出色工作！
