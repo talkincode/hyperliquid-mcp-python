@@ -1,0 +1,39 @@
+# Pre-commit hooks 配置
+# 安装: uv run pre-commit install
+# 运行: uv run pre-commit run --all-files
+
+repos:
+  # Black - Python 代码格式化
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        language_version: python3.12
+
+  # isort - Import 排序
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+
+  # 基础检查
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace      # 删除行尾空格
+      - id: end-of-file-fixer        # 确保文件以换行符结束
+      - id: check-yaml               # 检查 YAML 语法
+      - id: check-added-large-files  # 防止提交大文件
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict     # 检查合并冲突标记
+      - id: check-toml               # 检查 TOML 语法
+      - id: mixed-line-ending        # 统一行尾格式
+        args: ['--fix=lf']
+
+  # Ruff - 快速 Python linter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]

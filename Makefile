@@ -115,14 +115,28 @@ format:
 	uv run black .
 	uv run isort .
 
-# 代码检查（不修改）
+# 代码检查(不修改)
 check:
 	uv run black --check .
 	uv run isort --check-only .
 
-# 代码检查（带 lint）
+# 代码检查(带 lint)
 lint: check
 	@echo "✅ 代码检查通过"
+
+# 设置 pre-commit hooks
+pre-commit-install:
+	uv run pre-commit install
+	@echo "✅ Pre-commit hooks 已安装"
+	@echo "现在每次 git commit 时都会自动运行代码检查和格式化"
+
+# 运行 pre-commit 检查所有文件
+pre-commit-all:
+	uv run pre-commit run --all-files
+
+# 更新 pre-commit hooks
+pre-commit-update:
+	uv run pre-commit autoupdate
 
 # ============================================================================
 # 文档和帮助
