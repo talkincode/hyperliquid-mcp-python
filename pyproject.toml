@@ -3,7 +3,7 @@ name = "hyperliquid-mcp-python"
 version = "0.1.4"
 description = "HyperLiquid MCP Server with FastMCP - Trading tools and account management"
 authors = [
-    {name = "Gigabrain", email = "chetan@gigabrain.gg"}
+    {name = "jettwang", email = "jamiesun.net@gmail.com"}
 ]
 readme = "README.md"
 license = {text = "MIT"}
@@ -27,10 +27,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/jamiesun/hyperliquid-mcp"
-Repository = "https://github.com/jamiesun/hyperliquid-mcp"
-Documentation = "https://github.com/jamiesun/hyperliquid-mcp#readme"
-"Bug Tracker" = "https://github.com/jamiesun/hyperliquid-mcp/issues"
+Homepage = "https://github.com/talkincode/hyperliquid-mcp-python"
+Repository = "https://github.com/talkincode/hyperliquid-mcp-python"
+Documentation = "https://github.com/talkincode/hyperliquid-mcp-python#readme"
+"Bug Tracker" = "https://github.com/talkincode/hyperliquid-mcp-python/issues"
 
 [project.optional-dependencies]
 dev = [

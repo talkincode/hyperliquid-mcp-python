@@ -1,6 +1,9 @@
+````markdown
 # HyperLiquid MCP Server
 
 基于 FastMCP 的 HyperLiquid 交易 MCP 服务器。为 AI 助手提供与 HyperLiquid 永续合约和现货交易平台交互的工具。
+
+> **致谢**: 本项目 Fork 自 [GigabrainGG/hyperliquid-mcp](https://github.com/GigabrainGG/hyperliquid-mcp)，感谢原作者的出色工作！
 
 ## 功能特性
 
@@ -57,8 +60,8 @@ uvx --python 3.13 --from hyperliquid-mcp-python hyperliquid-mcp stdio
 
 ```bash
 # 克隆仓库
-git clone https://github.com/jamiesun/hyperliquid-mcp.git
-cd hyperliquid-mcp
+git clone https://github.com/talkincode/hyperliquid-mcp-python.git
+cd hyperliquid-mcp-python
 
 # 安装依赖（uv 会自动处理编译）
 uv sync
