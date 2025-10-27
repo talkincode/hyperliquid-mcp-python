@@ -9,11 +9,14 @@ from pathlib import Path
 # 添加项目根目录到路径
 sys.path.insert(0, str(Path(__file__).parent))
 
-import main
 import logging
 
+import main
+
 # 配置日志
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -22,7 +25,7 @@ async def test_configuration():
     print("=" * 60)
     print("HyperLiquid MCP 配置测试")
     print("=" * 60)
-    
+
     # 1. 检查配置
     try:
         config = main.get_config()
@@ -33,7 +36,7 @@ async def test_configuration():
     except Exception as e:
         print(f"\n❌ 配置加载失败: {e}")
         return False
-    
+
     # 2. 初始化服务
     try:
         main.initialize_service()
@@ -42,7 +45,7 @@ async def test_configuration():
     except Exception as e:
         print(f"\n❌ 服务初始化失败: {e}")
         return False
-    
+
     # 3. 测试获取账户余额
     print("\n" + "-" * 60)
     print("测试 1: 获取账户余额")
@@ -61,7 +64,7 @@ async def test_configuration():
     except Exception as e:
         print(f"❌ 获取余额异常: {e}")
         return False
-    
+
     # 4. 测试获取持仓
     print("\n" + "-" * 60)
     print("测试 2: 获取持仓信息")
@@ -74,7 +77,9 @@ async def test_configuration():
             print(f"✅ 持仓数量: {total}")
             if pos_list:
                 for pos in pos_list:
-                    print(f"   - {pos.get('coin')}: 数量={pos.get('position_value')}, PnL={pos.get('unrealized_pnl')}")
+                    print(
+                        f"   - {pos.get('coin')}: 数量={pos.get('position_value')}, PnL={pos.get('unrealized_pnl')}"
+                    )
             else:
                 print("   (当前无持仓)")
         else:
@@ -83,7 +88,7 @@ async def test_configuration():
     except Exception as e:
         print(f"❌ 获取持仓异常: {e}")
         return False
-    
+
     # 5. 测试获取未平仓订单
     print("\n" + "-" * 60)
     print("测试 3: 获取未平仓订单")
@@ -96,7 +101,9 @@ async def test_configuration():
             print(f"✅ 订单数量: {total}")
             if order_list:
                 for order in order_list:
-                    print(f"   - {order.get('coin')}: {order.get('side')} {order.get('sz')} @ {order.get('limitPx')}")
+                    print(
+                        f"   - {order.get('coin')}: {order.get('side')} {order.get('sz')} @ {order.get('limitPx')}"
+                    )
             else:
                 print("   (当前无未平仓订单)")
         else:
@@ -105,7 +112,7 @@ async def test_configuration():
     except Exception as e:
         print(f"❌ 获取订单异常: {e}")
         return False
-    
+
     # 6. 测试获取市场数据
     print("\n" + "-" * 60)
     print("测试 4: 获取 BTC 市场数据")
@@ -124,7 +131,7 @@ async def test_configuration():
     except Exception as e:
         print(f"❌ 获取市场数据异常: {e}")
         return False
-    
+
     # 7. 测试完整账户摘要
     print("\n" + "-" * 60)
     print("测试 5: 获取完整账户摘要")
@@ -134,21 +141,31 @@ async def test_configuration():
         balance = await main.hyperliquid_service.get_account_balance()
         positions = await main.hyperliquid_service.get_open_positions()
         orders = await main.hyperliquid_service.get_open_orders()
-        
+
         summary = {
             "success": True,
             "summary": {
                 "balance": balance.get("data") if balance.get("success") else None,
-                "positions": positions.get("positions", []) if positions.get("success") else [],
+                "positions": (
+                    positions.get("positions", []) if positions.get("success") else []
+                ),
                 "orders": orders.get("orders", []) if orders.get("success") else [],
-                "total_positions": positions.get("total_positions", 0) if positions.get("success") else 0,
-                "total_orders": orders.get("total_orders", 0) if orders.get("success") else 0
-            }
+                "total_positions": (
+                    positions.get("total_positions", 0)
+                    if positions.get("success")
+                    else 0
+                ),
+                "total_orders": (
+                    orders.get("total_orders", 0) if orders.get("success") else 0
+                ),
+            },
         }
-        
+
         if summary.get("success"):
             print(f"✅ 账户摘要:")
-            print(f"   账户价值: ${summary['summary']['balance'].get('account_value', 'N/A')}")
+            print(
+                f"   账户价值: ${summary['summary']['balance'].get('account_value', 'N/A')}"
+            )
             print(f"   持仓数: {summary['summary']['total_positions']}")
             print(f"   订单数: {summary['summary']['total_orders']}")
         else:
@@ -157,11 +174,11 @@ async def test_configuration():
     except Exception as e:
         print(f"❌ 获取账户摘要异常: {e}")
         return False
-    
+
     print("\n" + "=" * 60)
     print("✅ 所有测试通过！配置正确，连接正常")
     print("=" * 60)
-    
+
     return True
 
 

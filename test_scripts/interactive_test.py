@@ -39,15 +39,15 @@ async def main_loop():
     network = "测试网 (Testnet)" if config.testnet else "主网 (Mainnet)"
     print(f"✅ 已连接到 {network}")
     print(f"   账户地址: {config.account_address}")
-    
+
     while True:
         await test_menu()
         choice = input("\n请选择操作 (0-9): ").strip()
-        
+
         if choice == "0":
             print("\n再见！")
             break
-        
+
         elif choice == "1":
             print("\n正在获取账户余额...")
             result = await main.hyperliquid_service.get_account_balance()
@@ -59,7 +59,7 @@ async def main_loop():
                 print(f"   保证金使用: ${data.get('margin_used', 'N/A')}")
             else:
                 print(f"\n❌ 失败: {result.get('error')}")
-        
+
         elif choice == "2":
             print("\n正在获取持仓...")
             result = await main.hyperliquid_service.get_open_positions()
@@ -79,7 +79,7 @@ async def main_loop():
                     print("   (当前无持仓)")
             else:
                 print(f"\n❌ 失败: {result.get('error')}")
-        
+
         elif choice == "3":
             print("\n正在获取未平仓订单...")
             result = await main.hyperliquid_service.get_open_orders()
@@ -98,7 +98,7 @@ async def main_loop():
                     print("   (当前无未平仓订单)")
             else:
                 print(f"\n❌ 失败: {result.get('error')}")
-        
+
         elif choice in ["4", "5", "6"]:
             coins = {"4": "BTC", "5": "ETH", "6": "SOL"}
             coin = coins[choice]
@@ -113,35 +113,35 @@ async def main_loop():
                 print(f"   未平仓合约: {data.get('open_interest', 'N/A')}")
             else:
                 print(f"\n❌ 失败: {result.get('error')}")
-        
+
         elif choice == "7":
             print("\n正在获取账户摘要...")
             balance = await main.hyperliquid_service.get_account_balance()
             positions = await main.hyperliquid_service.get_open_positions()
             orders = await main.hyperliquid_service.get_open_orders()
-            
+
             print(f"\n✅ 账户摘要:")
             if balance.get("success"):
                 data = balance.get("data", {})
                 print(f"\n   余额:")
                 print(f"     总权益: ${data.get('account_value', 'N/A')}")
                 print(f"     可用: ${data.get('withdrawable', 'N/A')}")
-            
+
             if positions.get("success"):
                 total_pos = positions.get("total_positions", 0)
                 print(f"\n   持仓: {total_pos} 个")
-            
+
             if orders.get("success"):
                 total_orders = orders.get("total_orders", 0)
                 print(f"   订单: {total_orders} 个")
-        
+
         elif choice == "8":
             coin = input("   输入币种 (如 SOL, BTC, ETH): ").strip().upper()
             dollar_str = input("   输入美元金额 (如 20): $").strip()
             try:
                 dollar_amount = float(dollar_str)
                 print(f"\n正在计算 ${dollar_amount} 可以买多少 {coin}...")
-                
+
                 # 获取市场价格
                 market_data = await main.hyperliquid_service.get_market_data(coin)
                 if market_data.get("success"):
@@ -153,39 +153,41 @@ async def main_loop():
                         print(f"   当前价格: ${price}")
                         print(f"   美元金额: ${dollar_amount}")
                         print(f"   代币数量: {token_amount:.8f} {coin}")
-                        print(f"   公式: ${dollar_amount} ÷ ${price} = {token_amount:.8f}")
+                        print(
+                            f"   公式: ${dollar_amount} ÷ ${price} = {token_amount:.8f}"
+                        )
                     else:
                         print(f"\n❌ 无法获取 {coin} 的价格")
                 else:
                     print(f"\n❌ 失败: {market_data.get('error')}")
             except ValueError:
                 print("\n❌ 无效的金额格式")
-        
+
         elif choice == "9":
             print("\n正在获取 BTC 订单簿...")
             result = await main.hyperliquid_service.get_orderbook("BTC", depth=10)
             if result.get("success"):
                 data = result.get("orderbook", {})
                 print(f"\n✅ BTC 订单簿 (前10档):")
-                
+
                 bids = data.get("bids", [])
                 asks = data.get("asks", [])
-                
+
                 print("\n   卖盘 (Asks):")
                 for ask in reversed(asks[-5:]):  # 显示最低5个卖单
                     print(f"     价格: ${ask.get('px')}, 数量: {ask.get('sz')}")
-                
+
                 print("\n   ----------------------")
-                
+
                 print("\n   买盘 (Bids):")
                 for bid in bids[:5]:  # 显示最高5个买单
                     print(f"     价格: ${bid.get('px')}, 数量: {bid.get('sz')}")
             else:
                 print(f"\n❌ 失败: {result.get('error')}")
-        
+
         else:
             print("\n❌ 无效的选择，请输入 0-9")
-        
+
         input("\n按 Enter 继续...")
 
 
@@ -197,4 +199,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ 发生错误: {e}")
         import traceback
+
         traceback.print_exc()
