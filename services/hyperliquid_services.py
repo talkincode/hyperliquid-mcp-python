@@ -4,7 +4,7 @@ from typing import Dict, Optional, Union, Any
 
 from hyperliquid.info import Info
 from hyperliquid.exchange import Exchange
-from hyperliquid.utils import constants
+from hyperliquid.utils import constants as hl_constants
 from hyperliquid.utils.types import Cloid
 from hyperliquid.utils.signing import (
     order_request_to_order_wire,
@@ -47,10 +47,10 @@ class HyperliquidServices:
             self.logger.setLevel(logging.INFO)
         
         # Set up API URLs
-        if testnet:
-            self.base_url = "https://api.hyperliquid.xyz"
-        else:
-            self.base_url = "https://api.hyperliquid.xyz"
+        mainnet_url = getattr(hl_constants, "MAINNET_API_URL", "https://api.hyperliquid.xyz")
+        testnet_url = getattr(hl_constants, "TESTNET_API_URL", "https://api.hyperliquid.xyz")
+        self.base_url = testnet_url if testnet else mainnet_url
+        self.is_mainnet = not testnet
             
         # Initialize account address and wallet
         from eth_account import Account
@@ -111,7 +111,7 @@ class HyperliquidServices:
             self.exchange.vault_address,
             timestamp,
             expires_after,
-            self.exchange.base_url == constants.MAINNET_API_URL
+            self.is_mainnet
         )
         
         # Post the action

@@ -455,7 +455,7 @@ async def set_take_profit_stop_loss(
             sl_px=stop_loss_price,
             position_size=position_size
         )
-    except ValidationError as e:
+    except (ValidationError, ValueError) as e:
         return {
             "success": False,
             "error": f"Invalid input: {str(e)}",
