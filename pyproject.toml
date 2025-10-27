@@ -58,6 +58,15 @@ packages = ["services"]
 [dependency-groups]
 dev = [
     "pytest>=7.0",
+    "pytest-asyncio>=0.21.0",
     "black>=22.0",
     "isort>=5.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+asyncio_mode = "auto"

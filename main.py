@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
 from services.hyperliquid_services import HyperliquidServices
+from services.validators import validate_order_inputs, ValidationError
 
 # Load environment variables
 load_dotenv()
@@ -145,16 +146,25 @@ async def place_limit_order(
     Note: For setting take profit/stop loss on existing positions, use set_take_profit_stop_loss instead.
     """
     initialize_service()
-    is_buy = side.lower() == "buy"
     
-    return await hyperliquid_service.place_order(
-        coin=coin,
-        is_buy=is_buy,
-        sz=size,
-        limit_px=price,
-        reduce_only=reduce_only,
-        cloid=client_order_id
-    )
+    try:
+        # 验证输入
+        validated = validate_order_inputs(coin, side, size, price)
+        
+        return await hyperliquid_service.place_order(
+            coin=validated["coin"],
+            is_buy=validated["is_buy"],
+            sz=validated["size"],
+            limit_px=validated["price"],
+            reduce_only=reduce_only,
+            cloid=client_order_id
+        )
+    except ValidationError as e:
+        return {
+            "success": False,
+            "error": f"Invalid input: {str(e)}",
+            "error_code": "VALIDATION_ERROR"
+        }
 
 
 @mcp.tool
@@ -179,14 +189,23 @@ async def market_open_position(
     Note: This uses HyperLiquid's native market_open method for the best execution.
     """
     initialize_service()
-    is_buy = side.lower() == "buy"
     
-    return await hyperliquid_service.market_open_position(
-        coin=coin,
-        is_buy=is_buy,
-        sz=size,
-        cloid=client_order_id
-    )
+    try:
+        # 验证输入（不需要价格）
+        validated = validate_order_inputs(coin, side, size, price=None)
+        
+        return await hyperliquid_service.market_open_position(
+            coin=validated["coin"],
+            is_buy=validated["is_buy"],
+            sz=validated["size"],
+            cloid=client_order_id
+        )
+    except ValidationError as e:
+        return {
+            "success": False,
+            "error": f"Invalid input: {str(e)}",
+            "error_code": "VALIDATION_ERROR"
+        }
 
 
 @mcp.tool
@@ -241,17 +260,31 @@ async def place_bracket_order(
     Uses HyperLiquid's normalTpSl grouping for proper OCO behavior where TP and SL orders cancel each other.
     """
     initialize_service()
-    is_buy = side.lower() == "buy"
     
-    return await hyperliquid_service.place_bracket_order(
-        coin=coin,
-        is_buy=is_buy,
-        sz=size,
-        limit_px=entry_price,
-        take_profit_px=take_profit_price,
-        stop_loss_px=stop_loss_price,
-        cloid=client_order_id
-    )
+    try:
+        # 验证输入
+        validated = validate_order_inputs(coin, side, size, entry_price)
+        
+        # 验证止盈止损价格
+        from services.validators import validate_price
+        validate_price(take_profit_price)
+        validate_price(stop_loss_price)
+        
+        return await hyperliquid_service.place_bracket_order(
+            coin=validated["coin"],
+            is_buy=validated["is_buy"],
+            sz=validated["size"],
+            limit_px=validated["price"],
+            take_profit_px=take_profit_price,
+            stop_loss_px=stop_loss_price,
+            cloid=client_order_id
+        )
+    except ValidationError as e:
+        return {
+            "success": False,
+            "error": f"Invalid input: {str(e)}",
+            "error_code": "VALIDATION_ERROR"
+        }
 
 
 @mcp.tool
@@ -404,12 +437,30 @@ async def set_take_profit_stop_loss(
     The orders will use OCO (One-Cancels-Other) behavior where executing one cancels the other.
     """
     initialize_service()
-    return await hyperliquid_service.set_position_tpsl(
-        coin=coin,
-        tp_px=take_profit_price,
-        sl_px=stop_loss_price,
-        position_size=position_size
-    )
+    
+    try:
+        # 验证币种
+        from services.validators import validate_coin, validate_price
+        validate_coin(coin)
+        
+        # 验证价格（如果提供）
+        if take_profit_price is not None:
+            validate_price(take_profit_price)
+        if stop_loss_price is not None:
+            validate_price(stop_loss_price)
+            
+        return await hyperliquid_service.set_position_tpsl(
+            coin=coin,
+            tp_px=take_profit_price,
+            sl_px=stop_loss_price,
+            position_size=position_size
+        )
+    except ValidationError as e:
+        return {
+            "success": False,
+            "error": f"Invalid input: {str(e)}",
+            "error_code": "VALIDATION_ERROR"
+        }
 
 
 @mcp.tool

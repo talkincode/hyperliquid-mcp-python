@@ -12,6 +12,14 @@ from hyperliquid.utils.signing import (
     sign_l1_action
 )
 
+from .constants import (
+    OCO_GROUP_NEW_POSITION,
+    OCO_GROUP_EXISTING_POSITION,
+    ORDER_TYPE_LIMIT_GTC,
+    ADDRESS_PREFIX_LEN,
+    ADDRESS_SUFFIX_LEN
+)
+
 class HyperliquidServices:
     """Comprehensive HyperLiquid services for trading and account management"""
     
@@ -48,9 +56,10 @@ class HyperliquidServices:
         from eth_account import Account
         self.wallet = Account.from_key(private_key)
         
-        self.account_address = account_address
-
-        print(self.account_address)
+        self.account_address = account_address or self.wallet.address
+        self.logger.info(
+            f"Account initialized: {self.account_address[:6]}...{self.account_address[-4:]}"
+        )
         
         # Initialize clients
         self.info = Info(self.base_url, skip_ws=True)
@@ -321,7 +330,10 @@ class HyperliquidServices:
             
             # Use custom bulk_orders with normalTpsl grouping for proper OCO behavior
             # Note: Standard SDK bulk_orders doesn't set grouping parameter correctly for OCO
-            bulk_result = self._bulk_orders_with_grouping(order_requests, grouping="normalTpsl")
+            bulk_result = self._bulk_orders_with_grouping(
+                order_requests, 
+                grouping=OCO_GROUP_NEW_POSITION
+            )
             
             self.logger.info(f"Bracket order placed successfully with OCO grouping: {bulk_result}")
             
@@ -336,7 +348,7 @@ class HyperliquidServices:
                     "take_profit_price": float(take_profit_px),
                     "stop_loss_price": float(stop_loss_px),
                     "reduce_only": reduce_only,
-                    "grouping": "normalTpSl"
+                    "grouping": OCO_GROUP_NEW_POSITION
                 }
             }
         except Exception as e:
@@ -740,13 +752,22 @@ class HyperliquidServices:
             
             # Try using the SDK's bulk_orders method with positionTpSl grouping
             try:
-                # First, let's try the standard bulk_orders approach
-                bulk_result = self.exchange.bulk_orders(order_requests)
-                self.logger.info(f"Standard bulk_orders result: {bulk_result}")
-
+                # 直接使用自定义方法确保分组正确
+                bulk_result = self._bulk_orders_with_grouping(
+                    order_requests, 
+                    grouping=OCO_GROUP_EXISTING_POSITION
+                )
+                self.logger.info(f"Position TP/SL set successfully: {bulk_result}")
             except Exception as e:
-                self.logger.error(f"Standard bulk_orders failed with exception: {e}")
-                # Fall back to custom method
+                self.logger.error(
+                    f"Failed to set position TP/SL for {coin}: {e}", 
+                    exc_info=True
+                )
+                return {
+                    "success": False,
+                    "error": f"Failed to submit OCO TP/SL orders: {str(e)}",
+                    "coin": coin
+                }
             
             self.logger.info(f"Position TP/SL set successfully for {coin}: {bulk_result}")
             
@@ -759,7 +780,7 @@ class HyperliquidServices:
                     "is_long": is_long,
                     "take_profit_price": tp_px,
                     "stop_loss_price": sl_px,
-                    "grouping": "positionTpSl"
+                    "grouping": OCO_GROUP_EXISTING_POSITION
                 }
             }
         except Exception as e:
