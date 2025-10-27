@@ -56,6 +56,27 @@ git push -u origin release/vx.y.z
 - PR 标题：`chore: Release vx.y.z`
 - PR 内容：第 4 步生成的 Release Notes
 - 等待 CI 检查通过
+
+#### ⚠️ 处理 [skip ci] 导致的 CI 跳过问题
+
+如果项目配置了 auto-format 工作流（如 black、isort），该工作流可能会自动添加一个包含 `[skip ci]` 标记的提交，导致 CI 检查被跳过。
+
+**检测方法**：
+- PR 页面显示 CI 状态为 "Expected — Waiting for status to be reported"
+- 检查最新提交消息是否包含 `[skip ci]`
+
+**解决方案**：
+```bash
+# 创建一个空提交来触发 CI
+git commit --allow-empty -m "ci: trigger CI checks"
+
+# 如果本地落后于远程（auto-format 已推送）
+git pull --rebase
+
+# 推送触发 CI
+git push
+```
+
 - **重要**：提示用户合并 PR 后再继续
 
 ### 5.5 创建标签（PR 合并后）
@@ -90,11 +111,17 @@ git push origin vx.y.z
    - 确认版本号未在 PyPI 上使用过
    - 确认用户有推送权限
 
-2. **错误处理**：
+2. **CI 检查问题**：
+   - 如果 PR 创建后 CI 一直显示 "Waiting for status to be reported"，检查是否有 auto-format 工作流添加了 `[skip ci]` 提交
+   - 解决方法：创建空提交 `git commit --allow-empty -m "ci: trigger CI checks"` 并推送
+   - 确保所有必需的 CI 检查都已通过后再合并 PR
+
+3. **错误处理**：
    - 如果任何步骤失败，提供清晰的错误信息
    - 如果已经打了标签但 Release 失败，说明如何删除标签重试
+   - 如果发现错误的标签（如版本号不连续），先清理标签再继续发布
 
-3. **可选功能**：
+4. **可选功能**：
    - 询问是否需要 pre-release（测试版本）
    - 询问是否同时更新文档
 
