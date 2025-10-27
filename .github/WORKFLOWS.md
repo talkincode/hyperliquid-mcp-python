@@ -49,6 +49,28 @@
 - 每周自动检查 Python 依赖更新
 - 自动创建 PR 以更新依赖
 
+## 🔒 分支保护
+
+为确保代码质量,强烈建议启用分支保护。详细配置指南请查看 `.github/BRANCH_PROTECTION.md`。
+
+**快速配置:**
+
+```bash
+# 使用提供的脚本一键配置
+./scripts/setup-branch-protection.sh
+
+# 或手动配置
+# 访问: https://github.com/talkincode/hyperliquid-mcp-python/settings/branches
+```
+
+**推荐的保护规则:**
+
+- ✅ 合并前需要 PR
+- ✅ 需要 1 人审查批准
+- ✅ 必需通过所有 CI 检查
+- ✅ 合并前需要解决所有对话
+- ✅ 管理员也需遵守规则
+
 ## 🎯 状态徽章
 
 在 README.md 中已添加以下徽章:

@@ -88,7 +88,32 @@ open https://github.com/talkincode/hyperliquid-mcp-python/actions
 - 代码质量检查应该通过 ✅
 - 包构建应该成功 ✅
 
-### 3. 测试发布流程 (可选)
+### 3. 配置分支保护 (强烈推荐) 🔒
+
+**为什么需要?**
+
+- 防止直接推送到主分支
+- 确保 CI 测试通过才能合并
+- 保持代码质量和稳定性
+
+**快速配置:**
+
+1. 访问 https://github.com/talkincode/hyperliquid-mcp-python/settings/branches
+2. 点击 "Add branch protection rule"
+3. Branch name pattern: `main`
+4. 启用以下选项:
+   - ✅ Require a pull request before merging
+     - Required approvals: 1
+   - ✅ Require status checks to pass before merging
+     - ✅ Require branches to be up to date
+     - 添加必需检查: `test (3.10)`, `test (3.11)`, `test (3.12)`, `test (3.13)`, `lint`, `build`
+   - ✅ Require conversation resolution before merging
+   - ✅ Do not allow bypassing the above settings
+5. 点击 "Create"
+
+**详细指南:** 查看 `.github/BRANCH_PROTECTION.md`
+
+### 4. 测试发布流程 (可选)
 
 **创建测试 Release:**
 
