@@ -8,8 +8,9 @@ HyperLiquid MCP CLI 入口
     hyperliquid-mcp stdio        # 启动 stdio 服务器
     hyperliquid-mcp --help       # 显示帮助
 """
-import sys
 import argparse
+import sys
+
 from main import start_server, stdio_server
 
 
@@ -34,27 +35,23 @@ def main():
     - HYPERLIQUID_ACCOUNT_ADDRESS  (可选，从私钥派生)
 
 更多信息，访问: https://github.com/jamiesun/hyperliquid-mcp
-        """
+        """,
     )
-    
+
     parser.add_argument(
-        'mode',
-        nargs='?',
-        default='start',
-        choices=['start', 'stdio'],
-        help='服务器模式: start (HTTP) 或 stdio (MCP 客户端)'
+        "mode",
+        nargs="?",
+        default="start",
+        choices=["start", "stdio"],
+        help="服务器模式: start (HTTP) 或 stdio (MCP 客户端)",
     )
-    
-    parser.add_argument(
-        '--version',
-        action='version',
-        version='HyperLiquid MCP v0.1.3'
-    )
-    
+
+    parser.add_argument("--version", action="version", version="HyperLiquid MCP v0.1.3")
+
     args = parser.parse_args()
-    
+
     # 根据模式执行
-    if args.mode == 'stdio':
+    if args.mode == "stdio":
         print("🚀 启动 HyperLiquid MCP 服务器（stdio 模式）...")
         stdio_server()
     else:

@@ -1,32 +1,35 @@
-import time
 import logging
-from typing import Dict, Optional, Union, Any
+import time
+from typing import Any, Dict, Optional, Union
 
-from hyperliquid.info import Info
 from hyperliquid.exchange import Exchange
+from hyperliquid.info import Info
 from hyperliquid.utils import constants as hl_constants
-from hyperliquid.utils.types import Cloid
 from hyperliquid.utils.signing import (
     order_request_to_order_wire,
     order_wires_to_order_action,
-    sign_l1_action
+    sign_l1_action,
 )
+from hyperliquid.utils.types import Cloid
 
 from .constants import (
-    OCO_GROUP_NEW_POSITION,
-    OCO_GROUP_EXISTING_POSITION,
-    ORDER_TYPE_LIMIT_GTC,
     ADDRESS_PREFIX_LEN,
-    ADDRESS_SUFFIX_LEN
+    ADDRESS_SUFFIX_LEN,
+    OCO_GROUP_EXISTING_POSITION,
+    OCO_GROUP_NEW_POSITION,
+    ORDER_TYPE_LIMIT_GTC,
 )
+
 
 class HyperliquidServices:
     """Comprehensive HyperLiquid services for trading and account management"""
-    
-    def __init__(self, private_key: str, testnet: bool = False, account_address: str = None):
+
+    def __init__(
+        self, private_key: str, testnet: bool = False, account_address: str = None
+    ):
         """
         Initialize HyperLiquid services
-        
+
         Args:
             private_key: Private key for signing transactions
             testnet: Whether to use testnet (default: False for mainnet)
@@ -34,76 +37,88 @@ class HyperliquidServices:
         """
         self.private_key = private_key
         self.testnet = testnet
-        
+
         # Set up logging
         self.logger = logging.getLogger("hyperliquid_services.HyperliquidServices")
         if not self.logger.handlers:
             handler = logging.StreamHandler()
             formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
             )
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)
             self.logger.setLevel(logging.INFO)
-        
+
         # Set up API URLs
-        mainnet_url = getattr(hl_constants, "MAINNET_API_URL", "https://api.hyperliquid.xyz")
-        testnet_url = getattr(hl_constants, "TESTNET_API_URL", "https://api.hyperliquid.xyz")
+        mainnet_url = getattr(
+            hl_constants, "MAINNET_API_URL", "https://api.hyperliquid.xyz"
+        )
+        testnet_url = getattr(
+            hl_constants, "TESTNET_API_URL", "https://api.hyperliquid.xyz"
+        )
         self.base_url = testnet_url if testnet else mainnet_url
         self.is_mainnet = not testnet
-            
+
         # Initialize account address and wallet
         from eth_account import Account
+
         self.wallet = Account.from_key(private_key)
-        
+
         self.account_address = account_address or self.wallet.address
         self.logger.info(
             f"Account initialized: {self.account_address[:6]}...{self.account_address[-4:]}"
         )
-        
+
         # Initialize clients
         self.info = Info(self.base_url, skip_ws=True)
         self.exchange = Exchange(self.wallet, self.base_url)
-        
+
         network = "testnet" if testnet else "mainnet"
-        self.logger.info(f"HyperliquidServices initialized for account {self.account_address} on {network}")
-    
+        self.logger.info(
+            f"HyperliquidServices initialized for account {self.account_address} on {network}"
+        )
+
     def _bulk_orders_with_grouping(self, order_requests, grouping="na", builder=None):
         """
         Custom bulk orders implementation that allows setting proper grouping for OCO orders
         """
-        self.logger.info(f"Processing {len(order_requests)} order requests with grouping: {grouping}")
+        self.logger.info(
+            f"Processing {len(order_requests)} order requests with grouping: {grouping}"
+        )
         self.logger.info(f"Order requests: {order_requests}")
-        
+
         # Convert order requests to order wires
         order_wires = []
         for i, order in enumerate(order_requests):
             try:
-                wire = order_request_to_order_wire(order, self.info.name_to_asset(order["coin"]))
+                wire = order_request_to_order_wire(
+                    order, self.info.name_to_asset(order["coin"])
+                )
                 self.logger.info(f"Order wire {i}: {wire}")
                 order_wires.append(wire)
             except Exception as e:
                 self.logger.error(f"Failed to convert order {i} to wire: {e}")
                 self.logger.error(f"Problem order: {order}")
                 raise
-        
+
         # Get timestamp
         timestamp = int(time.time() * 1000)
-        
+
         # Create the order action using the SDK's function
         order_action = order_wires_to_order_action(order_wires, None)
-        
+
         # Set the grouping parameter (this is the key difference!)
         order_action["grouping"] = grouping
-        
+
         self.logger.info(f"Final order action: {order_action}")
-        
+
         # Debug: Log the raw JSON that will be sent
         import json
+
         self.logger.info(f"Order action as JSON: {json.dumps(order_action, indent=2)}")
 
         expires_after = self.exchange.expires_after
-        
+
         # Sign the action using the same approach as the working code
         signature = sign_l1_action(
             self.exchange.wallet,
@@ -111,12 +126,12 @@ class HyperliquidServices:
             self.exchange.vault_address,
             timestamp,
             expires_after,
-            self.is_mainnet
+            self.is_mainnet,
         )
-        
+
         # Post the action
         return self.exchange._post_action(order_action, signature, timestamp)
-    
+
     async def get_account_balance(self) -> Dict[str, Any]:
         """Get account balance and margin information"""
         try:
@@ -124,67 +139,71 @@ class HyperliquidServices:
             return {
                 "success": True,
                 "data": user_state,
-                "account_address": self.account_address
+                "account_address": self.account_address,
             }
         except Exception as e:
             self.logger.error(f"Failed to get account balance: {str(e)}", exc_info=True)
             return {"success": False, "error": str(e)}
-    
+
     async def get_open_positions(self) -> Dict[str, Any]:
         """Get all open positions"""
         try:
             user_state = self.info.user_state(self.account_address)
             positions = user_state.get("assetPositions", [])
-            
+
             formatted_positions = []
             for pos in positions:
                 if pos["position"]["szi"] != "0":  # Only include non-zero positions
-                    formatted_positions.append({
-                        "coin": pos["position"]["coin"],
-                        "size": pos["position"]["szi"],
-                        "entry_price": pos["position"]["entryPx"],
-                        "unrealized_pnl": pos["position"]["unrealizedPnl"],
-                        "return_on_equity": pos["position"]["returnOnEquity"],
-                        "margin_used": pos["position"]["marginUsed"]
-                    })
-            
+                    formatted_positions.append(
+                        {
+                            "coin": pos["position"]["coin"],
+                            "size": pos["position"]["szi"],
+                            "entry_price": pos["position"]["entryPx"],
+                            "unrealized_pnl": pos["position"]["unrealizedPnl"],
+                            "return_on_equity": pos["position"]["returnOnEquity"],
+                            "margin_used": pos["position"]["marginUsed"],
+                        }
+                    )
+
             return {
                 "success": True,
                 "positions": formatted_positions,
-                "total_positions": len(formatted_positions)
+                "total_positions": len(formatted_positions),
             }
         except Exception as e:
             self.logger.error(f"Failed to get open positions: {str(e)}", exc_info=True)
             return {"success": False, "error": str(e)}
-    
+
     async def get_open_orders(self) -> Dict[str, Any]:
         """Get all open orders"""
         try:
             open_orders = self.info.open_orders(self.account_address)
-            
+
             formatted_orders = []
             for order in open_orders:
-                formatted_orders.append({
-                "order_id": order["oid"],
-                "coin": order["coin"],
-                "side": "buy" if order["side"] == "B" else "sell",
-                "size": order["sz"],
-                "limit_price": order["limitPx"],
-                "reduce_only": order.get("reduceOnly", False),
-                "order_type": order.get("orderType", "unknown"),
-                "timestamp": order["timestamp"],
-                "cloid": order.get("cloid")
-            })
-            
+                formatted_orders.append(
+                    {
+                        "order_id": order["oid"],
+                        "coin": order["coin"],
+                        "side": "buy" if order["side"] == "B" else "sell",
+                        "size": order["sz"],
+                        "limit_price": order["limitPx"],
+                        "reduce_only": order.get("reduceOnly", False),
+                        "order_type": order.get("orderType", "unknown"),
+                        "timestamp": order["timestamp"],
+                        "cloid": order.get("cloid"),
+                    }
+                )
+
             return {
                 "success": True,
                 "orders": formatted_orders,
-                "total_orders": len(formatted_orders)
+                "total_orders": len(formatted_orders),
             }
         except Exception as e:
             self.logger.error(f"Failed to get open orders: {str(e)}", exc_info=True)
             return {"success": False, "error": str(e)}
-    
+
     async def place_order(
         self,
         coin: str,
@@ -195,11 +214,11 @@ class HyperliquidServices:
         reduce_only: bool = False,
         cloid: Optional[str] = None,
         tp_px: Optional[Union[str, float]] = None,
-        sl_px: Optional[Union[str, float]] = None
+        sl_px: Optional[Union[str, float]] = None,
     ) -> Dict[str, Any]:
         """
         Place a single order or bracket order if TP/SL is specified
-        
+
         Args:
             coin: Trading pair (e.g., "BTC", "ETH")
             is_buy: True for buy, False for sell
@@ -214,30 +233,38 @@ class HyperliquidServices:
         try:
             side = "BUY" if is_buy else "SELL"
             self.logger.info(f"Placing order: {coin} {side} {sz} @ {limit_px}")
-            
+
             # If TP or SL is specified, use bracket order logic
             if tp_px is not None or sl_px is not None:
                 if tp_px is None or sl_px is None:
-                    raise ValueError("Both take_profit_px and stop_loss_px must be specified for bracket orders")
+                    raise ValueError(
+                        "Both take_profit_px and stop_loss_px must be specified for bracket orders"
+                    )
                 return await self.place_bracket_order(
                     coin, is_buy, sz, limit_px, tp_px, sl_px, reduce_only, cloid
                 )
-            
+
             # Default order type
             if order_type is None:
                 order_type = {"limit": {"tif": "Gtc"}}
-            
+
             if cloid is not None:
                 order_result = self.exchange.order(
-                    coin, is_buy, float(sz), float(limit_px), order_type, reduce_only, cloid
+                    coin,
+                    is_buy,
+                    float(sz),
+                    float(limit_px),
+                    order_type,
+                    reduce_only,
+                    cloid,
                 )
             else:
                 order_result = self.exchange.order(
                     coin, is_buy, float(sz), float(limit_px), order_type, reduce_only
                 )
-            
+
             self.logger.info(f"Order placed successfully: {order_result}")
-            
+
             return {
                 "success": True,
                 "order_result": order_result,
@@ -248,16 +275,13 @@ class HyperliquidServices:
                     "limit_price": float(limit_px),
                     "order_type": order_type,
                     "reduce_only": reduce_only,
-                    "cloid": cloid
-                }
+                    "cloid": cloid,
+                },
             }
         except Exception as e:
             self.logger.error(f"Failed to place order for {coin}: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
-    
+            return {"success": False, "error": str(e)}
+
     async def place_bracket_order(
         self,
         coin: str,
@@ -267,11 +291,11 @@ class HyperliquidServices:
         take_profit_px: Union[str, float],
         stop_loss_px: Union[str, float],
         reduce_only: bool = False,
-        cloid: Optional[str] = None
+        cloid: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Place a bracket order using bulk_orders with normalTpSl grouping for proper OCO behavior
-        
+
         Args:
             coin: Trading pair (e.g., "BTC", "ETH")
             is_buy: True for buy, False for sell
@@ -284,11 +308,13 @@ class HyperliquidServices:
         """
         try:
             side = "BUY" if is_buy else "SELL"
-            self.logger.info(f"Placing bracket order with normalTpSl grouping: {coin} {side} {sz} @ {limit_px}, TP: {take_profit_px}, SL: {stop_loss_px}")
-            
+            self.logger.info(
+                f"Placing bracket order with normalTpSl grouping: {coin} {side} {sz} @ {limit_px}, TP: {take_profit_px}, SL: {stop_loss_px}"
+            )
+
             # Prepare order requests for bulk_orders
             order_requests = []
-            
+
             # Entry order
             entry_order = {
                 "coin": coin,
@@ -296,47 +322,60 @@ class HyperliquidServices:
                 "sz": float(sz),
                 "limit_px": float(limit_px),
                 "order_type": {"limit": {"tif": "Gtc"}},
-                "reduce_only": reduce_only
+                "reduce_only": reduce_only,
             }
             if cloid:
                 entry_order["cloid"] = Cloid(cloid)
             order_requests.append(entry_order)
-            
+
             # Take profit order (opposite side, reduce only)
             tp_order = {
                 "coin": coin,
                 "is_buy": not is_buy,
                 "sz": float(sz),
                 "limit_px": float(take_profit_px),
-                "order_type": {"trigger": {"triggerPx": float(take_profit_px), "isMarket": False, "tpsl": "tp"}},
-                "reduce_only": True
+                "order_type": {
+                    "trigger": {
+                        "triggerPx": float(take_profit_px),
+                        "isMarket": False,
+                        "tpsl": "tp",
+                    }
+                },
+                "reduce_only": True,
             }
             if cloid:
                 tp_order["cloid"] = Cloid(f"{cloid}_tp")
             order_requests.append(tp_order)
-            
+
             # Stop loss order (opposite side, reduce only)
             sl_order = {
                 "coin": coin,
                 "is_buy": not is_buy,
                 "sz": float(sz),
                 "limit_px": float(stop_loss_px),
-                "order_type": {"trigger": {"triggerPx": float(stop_loss_px), "isMarket": True, "tpsl": "sl"}},
-                "reduce_only": True
+                "order_type": {
+                    "trigger": {
+                        "triggerPx": float(stop_loss_px),
+                        "isMarket": True,
+                        "tpsl": "sl",
+                    }
+                },
+                "reduce_only": True,
             }
             if cloid:
                 sl_order["cloid"] = Cloid(f"{cloid}_sl")
             order_requests.append(sl_order)
-            
+
             # Use custom bulk_orders with normalTpsl grouping for proper OCO behavior
             # Note: Standard SDK bulk_orders doesn't set grouping parameter correctly for OCO
             bulk_result = self._bulk_orders_with_grouping(
-                order_requests, 
-                grouping=OCO_GROUP_NEW_POSITION
+                order_requests, grouping=OCO_GROUP_NEW_POSITION
             )
-            
-            self.logger.info(f"Bracket order placed successfully with OCO grouping: {bulk_result}")
-            
+
+            self.logger.info(
+                f"Bracket order placed successfully with OCO grouping: {bulk_result}"
+            )
+
             return {
                 "success": True,
                 "bulk_result": bulk_result,
@@ -348,16 +387,13 @@ class HyperliquidServices:
                     "take_profit_price": float(take_profit_px),
                     "stop_loss_price": float(stop_loss_px),
                     "reduce_only": reduce_only,
-                    "grouping": OCO_GROUP_NEW_POSITION
-                }
+                    "grouping": OCO_GROUP_NEW_POSITION,
+                },
             }
         except Exception as e:
             self.logger.error(f"Failed to place bracket order for {coin}: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
-    
+            return {"success": False, "error": str(e)}
+
     async def cancel_order(self, coin: str, oid: int) -> Dict[str, Any]:
         """Cancel a specific order by order ID"""
         try:
@@ -367,16 +403,18 @@ class HyperliquidServices:
             return {
                 "success": True,
                 "cancel_result": cancel_result,
-                "cancelled_order": {"coin": coin, "order_id": oid}
+                "cancelled_order": {"coin": coin, "order_id": oid},
             }
         except Exception as e:
-            self.logger.error(f"Failed to cancel order {oid} for {coin}: {str(e)}", exc_info=True)
+            self.logger.error(
+                f"Failed to cancel order {oid} for {coin}: {str(e)}", exc_info=True
+            )
             return {"success": False, "error": str(e)}
-    
+
     async def cancel_order_by_cloid(self, coin: str, cloid: str) -> Dict[str, Any]:
         """
         Cancel a specific order by client order ID
-        
+
         Args:
             coin: Trading pair
             cloid: Client order ID (128-bit hex string, e.g. 0x1234567890abcdef1234567890abcdef)
@@ -384,17 +422,20 @@ class HyperliquidServices:
         try:
             self.logger.info(f"Cancelling order {cloid} for {coin}")
             cancel_result = self.exchange.cancel_by_cloid(coin, cloid)
-            self.logger.info("Order %s cancelled successfully: %s", cloid, cancel_result)
+            self.logger.info(
+                "Order %s cancelled successfully: %s", cloid, cancel_result
+            )
             return {
                 "success": True,
                 "cancel_result": cancel_result,
-                "cancelled_order": {"coin": coin, "cloid": cloid}
+                "cancelled_order": {"coin": coin, "cloid": cloid},
             }
         except Exception as e:
-            self.logger.error(f"Failed to cancel order {cloid} for {coin}: {str(e)}", exc_info=True)
+            self.logger.error(
+                f"Failed to cancel order {cloid} for {coin}: {str(e)}", exc_info=True
+            )
             return {"success": False, "error": str(e)}
 
-    
     async def cancel_all_orders(self, coin: Optional[str] = None) -> Dict[str, Any]:
         """Cancel all orders, optionally for a specific coin"""
         try:
@@ -403,68 +444,80 @@ class HyperliquidServices:
                 # Cancel all orders for specific coin
                 open_orders = self.info.open_orders(self.account_address)
                 coin_orders = [order for order in open_orders if order["coin"] == coin]
-                
+
                 results = []
                 for order in coin_orders:
                     cancel_result = await self.cancel_order(coin, order["oid"])
                     results.append(cancel_result)
-                
+
                 successful_cancellations = len([r for r in results if r["success"]])
-                self.logger.info(f"Cancelled {successful_cancellations} orders for {coin}")
-                
+                self.logger.info(
+                    f"Cancelled {successful_cancellations} orders for {coin}"
+                )
+
                 return {
                     "success": True,
                     "cancelled_orders": len([r for r in results if r["success"]]),
-                    "failed_cancellations": len([r for r in results if not r["success"]]),
-                    "results": results
+                    "failed_cancellations": len(
+                        [r for r in results if not r["success"]]
+                    ),
+                    "results": results,
                 }
             else:
                 self.logger.info("Cancelling all orders")
                 # Get all open orders and cancel them individually
                 open_orders = self.info.open_orders(self.account_address)
-                
+
                 results = []
                 for order in open_orders:
                     cancel_result = await self.cancel_order(order["coin"], order["oid"])
                     results.append(cancel_result)
-                
+
                 successful_cancellations = len([r for r in results if r["success"]])
                 self.logger.info(f"Cancelled {successful_cancellations} orders")
-                
+
                 return {
                     "success": True,
                     "cancelled_orders": successful_cancellations,
-                    "failed_cancellations": len([r for r in results if not r["success"]]),
-                    "results": results
+                    "failed_cancellations": len(
+                        [r for r in results if not r["success"]]
+                    ),
+                    "results": results,
                 }
         except Exception as e:
             coin_suffix = f" for {coin}" if coin else ""
-            self.logger.error(f"Failed to cancel orders{coin_suffix}: {str(e)}", exc_info=True)
+            self.logger.error(
+                f"Failed to cancel orders{coin_suffix}: {str(e)}", exc_info=True
+            )
             return {"success": False, "error": str(e)}
-    
+
     async def modify_order(
         self,
         coin: str,
         oid: int,
         new_sz: Union[str, float],
-        new_limit_px: Union[str, float]
+        new_limit_px: Union[str, float],
     ) -> Dict[str, Any]:
         """Modify an existing order"""
         try:
-            self.logger.info(f"Modifying order {oid} for {coin}: new size={new_sz}, new price={new_limit_px}")
+            self.logger.info(
+                f"Modifying order {oid} for {coin}: new size={new_sz}, new price={new_limit_px}"
+            )
             modify_result = self.exchange.modify_order(
-                coin, oid, {
+                coin,
+                oid,
+                {
                     "a": 0,  # asset index will be filled by exchange
                     "b": True,  # will be determined by exchange
                     "p": float(new_limit_px),
                     "s": float(new_sz),
                     "r": False,  # reduce only
-                    "t": {"limit": {"tif": "Gtc"}}
-                }
+                    "t": {"limit": {"tif": "Gtc"}},
+                },
             )
-            
+
             self.logger.info("Order %s modified successfully: %s", oid, modify_result)
-            
+
             return {
                 "success": True,
                 "modify_result": modify_result,
@@ -472,33 +525,35 @@ class HyperliquidServices:
                     "coin": coin,
                     "order_id": oid,
                     "new_size": str(new_sz),
-                    "new_price": str(new_limit_px)
-                }
+                    "new_price": str(new_limit_px),
+                },
             }
         except Exception as e:
-            self.logger.error(f"Failed to modify order {oid} for {coin}: {str(e)}", exc_info=True)
+            self.logger.error(
+                f"Failed to modify order {oid} for {coin}: {str(e)}", exc_info=True
+            )
             return {"success": False, "error": str(e)}
-    
+
     async def get_market_data(self, coin: str) -> Dict[str, Any]:
         """Get market data for a specific coin including bid/ask prices"""
         try:
             all_mids = self.info.all_mids()
             meta = self.info.meta()
-            
+
             # Get orderbook for bid/ask prices
             l2_book = self.info.l2_snapshot(coin)
-            
+
             market_data = {
                 "coin": coin,
                 "mid_price": all_mids.get(coin, "N/A"),
-                "timestamp": int(time.time() * 1000)
+                "timestamp": int(time.time() * 1000),
             }
-            
+
             # Extract best bid and ask from orderbook
             if l2_book and "levels" in l2_book:
                 bids = l2_book["levels"][0] if len(l2_book["levels"]) > 0 else []
                 asks = l2_book["levels"][1] if len(l2_book["levels"]) > 1 else []
-                
+
                 market_data["best_bid"] = bids[0]["px"] if bids else "N/A"
                 market_data["best_ask"] = asks[0]["px"] if asks else "N/A"
                 market_data["bid_size"] = bids[0]["sz"] if bids else "N/A"
@@ -508,157 +563,176 @@ class HyperliquidServices:
                 market_data["best_ask"] = "N/A"
                 market_data["bid_size"] = "N/A"
                 market_data["ask_size"] = "N/A"
-            
+
             # Add universe data if available
             universe = meta.get("universe", [])
             coin_info = next((item for item in universe if item["name"] == coin), None)
             if coin_info:
-                market_data.update({
-                    "max_leverage": coin_info.get("maxLeverage", "N/A"),
-                    "only_isolated": coin_info.get("onlyIsolated", False)
-                })
-            
-            return {
-                "success": True,
-                "market_data": market_data
-            }
+                market_data.update(
+                    {
+                        "max_leverage": coin_info.get("maxLeverage", "N/A"),
+                        "only_isolated": coin_info.get("onlyIsolated", False),
+                    }
+                )
+
+            return {"success": True, "market_data": market_data}
         except Exception as e:
-            self.logger.error(f"Failed to get market data for {coin}: {str(e)}", exc_info=True)
+            self.logger.error(
+                f"Failed to get market data for {coin}: {str(e)}", exc_info=True
+            )
             return {"success": False, "error": str(e)}
-    
+
     async def get_orderbook(self, coin: str, depth: int = 20) -> Dict[str, Any]:
         """Get orderbook data for a specific coin"""
         try:
             l2_book = self.info.l2_snapshot(coin)
-            
+
             # Limit depth
             bids = l2_book["levels"][0][:depth] if len(l2_book["levels"]) > 0 else []
             asks = l2_book["levels"][1][:depth] if len(l2_book["levels"]) > 1 else []
-            
+
             return {
                 "success": True,
                 "orderbook": {
                     "coin": coin,
                     "bids": bids,
                     "asks": asks,
-                    "timestamp": l2_book["time"]
-                }
+                    "timestamp": l2_book["time"],
+                },
             }
         except Exception as e:
-            self.logger.error(f"Failed to get orderbook for {coin}: {str(e)}", exc_info=True)
+            self.logger.error(
+                f"Failed to get orderbook for {coin}: {str(e)}", exc_info=True
+            )
             return {"success": False, "error": str(e)}
-    
-    async def update_leverage(self, coin: str, leverage: int, is_cross: bool = True) -> Dict[str, Any]:
+
+    async def update_leverage(
+        self, coin: str, leverage: int, is_cross: bool = True
+    ) -> Dict[str, Any]:
         """Update leverage for a coin"""
         try:
             # Validate inputs
             if not isinstance(coin, str) or not coin:
                 return {"success": False, "error": "Invalid coin parameter"}
             if not isinstance(leverage, int) or leverage <= 0:
-                return {"success": False, "error": "Invalid leverage parameter - must be positive integer"}
-            
+                return {
+                    "success": False,
+                    "error": "Invalid leverage parameter - must be positive integer",
+                }
+
             margin_type = "cross" if is_cross else "isolated"
-            self.logger.info(f"Updating leverage for {coin}: {leverage}x ({margin_type})")
-            
+            self.logger.info(
+                f"Updating leverage for {coin}: {leverage}x ({margin_type})"
+            )
+
             # Try the standard parameter order first
             try:
-                leverage_result = self.exchange.update_leverage(leverage, coin, is_cross)
+                leverage_result = self.exchange.update_leverage(
+                    leverage, coin, is_cross
+                )
             except Exception as e:
                 # If that fails, this might be a version issue - try alternative approaches
                 self.logger.warning(f"Standard leverage update failed: {str(e)}")
-                return {"success": False, "error": f"Leverage update not supported or failed: {str(e)}"}
-            
-            self.logger.info(f"Leverage updated successfully for {coin}: {leverage_result}")
-            
+                return {
+                    "success": False,
+                    "error": f"Leverage update not supported or failed: {str(e)}",
+                }
+
+            self.logger.info(
+                f"Leverage updated successfully for {coin}: {leverage_result}"
+            )
+
             return {
                 "success": True,
                 "leverage_result": leverage_result,
                 "leverage_update": {
                     "coin": coin,
                     "leverage": leverage,
-                    "cross_margin": is_cross
-                }
+                    "cross_margin": is_cross,
+                },
             }
         except Exception as e:
-            self.logger.error(f"Failed to update leverage for {coin}: {str(e)}", exc_info=True)
+            self.logger.error(
+                f"Failed to update leverage for {coin}: {str(e)}", exc_info=True
+            )
             return {"success": False, "error": str(e)}
-    
+
     async def transfer_between_spot_and_perp(
-        self,
-        amount: Union[str, float],
-        to_perp: bool = True
+        self, amount: Union[str, float], to_perp: bool = True
     ) -> Dict[str, Any]:
         """Transfer funds between spot and perpetual accounts"""
         try:
             direction = "spot to perp" if to_perp else "perp to spot"
             self.logger.info(f"Transferring {amount} from {direction}")
-            
-            transfer_result = self.exchange.usd_class_transfer(
-                float(amount), to_perp
-            )
-            
+
+            transfer_result = self.exchange.usd_class_transfer(float(amount), to_perp)
+
             self.logger.info(f"Transfer completed successfully: {transfer_result}")
-            
+
             return {
                 "success": True,
                 "transfer_result": transfer_result,
                 "transfer_details": {
                     "amount": str(amount),
-                    "direction": "spot_to_perp" if to_perp else "perp_to_spot"
-                }
+                    "direction": "spot_to_perp" if to_perp else "perp_to_spot",
+                },
             }
         except Exception as e:
             self.logger.error(f"Failed to transfer {amount}: {str(e)}", exc_info=True)
             return {"success": False, "error": str(e)}
-    
+
     async def get_funding_history(self, coin: str, days: int = 7) -> Dict[str, Any]:
         """Get funding history for a coin"""
         try:
             end_time = int(time.time() * 1000)
             start_time = end_time - (days * 24 * 60 * 60 * 1000)
-            
-            funding_history = self.info.funding_history(
-                coin, start_time, end_time
-            )
-            
+
+            funding_history = self.info.funding_history(coin, start_time, end_time)
+
             return {
                 "success": True,
                 "funding_history": funding_history,
                 "coin": coin,
-                "days": days
+                "days": days,
             }
         except Exception as e:
-            self.logger.error(f"Failed to get funding history for {coin}: {str(e)}", exc_info=True)
+            self.logger.error(
+                f"Failed to get funding history for {coin}: {str(e)}", exc_info=True
+            )
             return {"success": False, "error": str(e)}
-    
+
     async def get_trade_history(self, days: int = 7) -> Dict[str, Any]:
         """Get trade history for the account"""
         try:
             user_fills = self.info.user_fills(self.account_address)
-            
+
             # Filter by days if needed
             if days > 0:
                 cutoff_time = int((time.time() - (days * 24 * 60 * 60)) * 1000)
-                user_fills = [fill for fill in user_fills if fill["time"] >= cutoff_time]
-            
+                user_fills = [
+                    fill for fill in user_fills if fill["time"] >= cutoff_time
+                ]
+
             formatted_fills = []
             for fill in user_fills:
-                formatted_fills.append({
-                    "coin": fill["coin"],
-                    "side": fill["side"],
-                    "size": fill["sz"],
-                    "price": fill["px"],
-                    "time": fill["time"],
-                    "order_id": fill["oid"],
-                    "fee": fill["fee"],
-                    "liquidation": fill.get("liquidation", False)
-                })
-            
+                formatted_fills.append(
+                    {
+                        "coin": fill["coin"],
+                        "side": fill["side"],
+                        "size": fill["sz"],
+                        "price": fill["px"],
+                        "time": fill["time"],
+                        "order_id": fill["oid"],
+                        "fee": fill["fee"],
+                        "liquidation": fill.get("liquidation", False),
+                    }
+                )
+
             return {
                 "success": True,
                 "trades": formatted_fills,
                 "total_trades": len(formatted_fills),
-                "days": days
+                "days": days,
             }
         except Exception as e:
             self.logger.error(f"Failed to get trade history: {str(e)}", exc_info=True)
@@ -669,11 +743,11 @@ class HyperliquidServices:
         coin: str,
         tp_px: Optional[Union[str, float]] = None,
         sl_px: Optional[Union[str, float]] = None,
-        position_size: Optional[Union[str, float]] = None
+        position_size: Optional[Union[str, float]] = None,
     ) -> Dict[str, Any]:
         """
         Set take profit and/or stop loss for an existing position using bulk_orders with positionTpSl grouping for proper OCO behavior
-        
+
         Args:
             coin: Trading pair (e.g., "BTC", "ETH")
             tp_px: Take profit price (optional)
@@ -683,11 +757,11 @@ class HyperliquidServices:
         try:
             if tp_px is None and sl_px is None:
                 raise ValueError("At least one of tp_px or sl_px must be specified")
-                
+
             # Get current position if size not provided
             if position_size is None:
                 user_state = self.info.user_state(self.account_address)
-                
+
                 position_found = False
                 for position in user_state.get("assetPositions", []):
                     if position.get("position", {}).get("coin") == coin:
@@ -696,12 +770,12 @@ class HyperliquidServices:
                             position_size = abs(float(pos_sz))
                             position_found = True
                             break
-                
+
                 if not position_found:
                     raise ValueError(f"No position found for {coin}")
-            
+
             position_size = float(position_size)
-            
+
             # Determine if position is long or short
             user_state = self.info.user_state(self.account_address)
             is_long = True  # Default
@@ -711,66 +785,78 @@ class HyperliquidServices:
                     if pos_sz:
                         is_long = float(pos_sz) > 0
                     break
-            
+
             # Prepare order requests for bulk_orders with positionTpSl grouping
             order_requests = []
-            
-            # Add take profit order if specified  
+
+            # Add take profit order if specified
             if tp_px is not None:
                 # For TP orders, use tick-aligned aggressive price
                 # If closing long (sell), use very low price; if closing short (buy), use very high price
                 slippage = 0.5  # 50% slippage for very aggressive pricing
                 aggressive_px = self._slippage_price(coin, not is_long, slippage)
-                
+
                 tp_order = {
                     "coin": coin,
                     "is_buy": not is_long,
                     "sz": float(position_size),
                     "limit_px": aggressive_px,  # Tick-aligned aggressive price for market execution
-                    "order_type": {"trigger": {"triggerPx": float(tp_px), "isMarket": True, "tpsl": "tp"}},
-                    "reduce_only": True
+                    "order_type": {
+                        "trigger": {
+                            "triggerPx": float(tp_px),
+                            "isMarket": True,
+                            "tpsl": "tp",
+                        }
+                    },
+                    "reduce_only": True,
                 }
                 self.logger.info(f"TP order structure: {tp_order}")
                 order_requests.append(tp_order)
-            
+
             # Add stop loss order if specified
             if sl_px is not None:
                 # For SL orders, use tick-aligned aggressive price
                 slippage = 0.5  # 50% slippage for very aggressive pricing
                 aggressive_px = self._slippage_price(coin, not is_long, slippage)
-                
+
                 sl_order = {
                     "coin": coin,
                     "is_buy": not is_long,
                     "sz": float(position_size),
                     "limit_px": aggressive_px,  # Tick-aligned aggressive price for market execution
-                    "order_type": {"trigger": {"triggerPx": float(sl_px), "isMarket": True, "tpsl": "sl"}},
-                    "reduce_only": True
+                    "order_type": {
+                        "trigger": {
+                            "triggerPx": float(sl_px),
+                            "isMarket": True,
+                            "tpsl": "sl",
+                        }
+                    },
+                    "reduce_only": True,
                 }
                 self.logger.info(f"SL order structure: {sl_order}")
                 order_requests.append(sl_order)
-            
+
             # Try using the SDK's bulk_orders method with positionTpSl grouping
             try:
                 # 直接使用自定义方法确保分组正确
                 bulk_result = self._bulk_orders_with_grouping(
-                    order_requests, 
-                    grouping=OCO_GROUP_EXISTING_POSITION
+                    order_requests, grouping=OCO_GROUP_EXISTING_POSITION
                 )
                 self.logger.info(f"Position TP/SL set successfully: {bulk_result}")
             except Exception as e:
                 self.logger.error(
-                    f"Failed to set position TP/SL for {coin}: {e}", 
-                    exc_info=True
+                    f"Failed to set position TP/SL for {coin}: {e}", exc_info=True
                 )
                 return {
                     "success": False,
                     "error": f"Failed to submit OCO TP/SL orders: {str(e)}",
-                    "coin": coin
+                    "coin": coin,
                 }
-            
-            self.logger.info(f"Position TP/SL set successfully for {coin}: {bulk_result}")
-            
+
+            self.logger.info(
+                f"Position TP/SL set successfully for {coin}: {bulk_result}"
+            )
+
             return {
                 "success": True,
                 "bulk_result": bulk_result,
@@ -780,43 +866,42 @@ class HyperliquidServices:
                     "is_long": is_long,
                     "take_profit_price": tp_px,
                     "stop_loss_price": sl_px,
-                    "grouping": OCO_GROUP_EXISTING_POSITION
-                }
+                    "grouping": OCO_GROUP_EXISTING_POSITION,
+                },
             }
         except Exception as e:
             self.logger.error(f"Failed to set position TP/SL for {coin}: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     async def market_open_position(
         self,
         coin: str,
         is_buy: bool,
         sz: Union[str, float],
-        cloid: Optional[str] = None
+        cloid: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Open a new position at market price
-        
+
         Args:
             coin: Trading pair (e.g., "BTC", "ETH")
             is_buy: True for long position, False for short position
             sz: Position size to open
             cloid: Optional client order ID for tracking
-            
+
         Returns:
             Dict containing success status and order details
         """
         try:
-            self.logger.info(f"Opening {'long' if is_buy else 'short'} position for {coin} with size {sz}")
-            
+            self.logger.info(
+                f"Opening {'long' if is_buy else 'short'} position for {coin} with size {sz}"
+            )
+
             # Use market_open directly
             order_result = self.exchange.market_open(coin, is_buy, float(sz), cloid)
-            
+
             self.logger.info(f"Position opened successfully for {coin}: {order_result}")
-            
+
             return {
                 "success": True,
                 "action": "market_open_position",
@@ -826,12 +911,14 @@ class HyperliquidServices:
                     "side": "long" if is_buy else "short",
                     "size": str(sz),
                     "order_type": "market",
-                    "cloid": cloid
-                }
+                    "cloid": cloid,
+                },
             }
-            
+
         except Exception as e:
-            self.logger.error(f"Failed to open market position for {coin}: {str(e)}", exc_info=True)
+            self.logger.error(
+                f"Failed to open market position for {coin}: {str(e)}", exc_info=True
+            )
             return {"success": False, "error": str(e)}
 
     async def market_close_position(
@@ -839,17 +926,17 @@ class HyperliquidServices:
         coin: str,
         sz: Optional[float] = None,
         cloid: Optional[str] = None,
-        slippage: float = 0.001  # 0.1% default slippage
+        slippage: float = 0.001,  # 0.1% default slippage
     ) -> Dict[str, Any]:
         """
         Close an existing position by placing a reverse market order with reduce_only=True
-        
+
         Args:
             coin: Trading pair (e.g., "BTC", "ETH")
             sz: Optional size to close (if None, closes entire position)
             cloid: Optional client order ID for tracking
             slippage: Slippage percentage for aggressive pricing (default 0.1%)
-            
+
         Returns:
             Dict containing success status and order details
         """
@@ -857,33 +944,35 @@ class HyperliquidServices:
             # Get current positions
             user_state = self.info.user_state(self.account_address)
             positions = user_state.get("assetPositions", [])
-            
+
             # Find the position for this coin
             for position in positions:
                 item = position["position"]
                 if coin != item["coin"]:
                     continue
-                    
+
                 szi = float(item["szi"])
                 if szi == 0:
                     return {
                         "success": False,
-                        "error": f"No open position found for {coin}"
+                        "error": f"No open position found for {coin}",
                     }
-                
+
                 # Determine size to close
                 if not sz:
                     sz = abs(szi)
-                
+
                 # Determine direction: buy to close short, sell to close long
                 is_buy = True if szi < 0 else False
-                
+
                 position_side = "short" if szi < 0 else "long"
-                self.logger.info(f"Closing {position_side} position for {coin} (size: {sz})")
-                
+                self.logger.info(
+                    f"Closing {position_side} position for {coin} (size: {sz})"
+                )
+
                 # Calculate price using HyperLiquid SDK logic
                 limit_px = self._slippage_price(coin, is_buy, slippage)
-                
+
                 # Place IOC order with reduce_only=True
                 result = await self.place_order(
                     coin=coin,
@@ -892,25 +981,24 @@ class HyperliquidServices:
                     limit_px=limit_px,
                     order_type={"limit": {"tif": "Ioc"}},
                     reduce_only=True,
-                    cloid=cloid
+                    cloid=cloid,
                 )
-                
+
                 # Add market close specific details to the result
                 if result.get("success"):
                     result["action"] = "market_close_position"
                     result["order_details"]["original_side"] = position_side
                     result["order_details"]["original_size"] = str(szi)
-                
+
                 return result
-            
+
             # If we get here, position was not found
-            return {
-                "success": False,
-                "error": f"No open position found for {coin}"
-            }
-            
+            return {"success": False, "error": f"No open position found for {coin}"}
+
         except Exception as e:
-            self.logger.error(f"Failed to close position for {coin}: {str(e)}", exc_info=True)
+            self.logger.error(
+                f"Failed to close position for {coin}: {str(e)}", exc_info=True
+            )
             return {"success": False, "error": str(e)}
 
     def _slippage_price(
@@ -931,20 +1019,20 @@ class HyperliquidServices:
         meta = self.info.meta()
         asset_index = None
         sz_decimals = 0
-        
+
         # Find asset index and decimals
-        for i, asset_info in enumerate(meta['universe']):
-            if asset_info['name'] == coin:
+        for i, asset_info in enumerate(meta["universe"]):
+            if asset_info["name"] == coin:
                 asset_index = i
-                sz_decimals = asset_info.get('szDecimals', 0)
+                sz_decimals = asset_info.get("szDecimals", 0)
                 break
-        
+
         # spot assets start at 10000 (not relevant for our case, but keeping for completeness)
         is_spot = asset_index is not None and asset_index >= 10_000
 
         # Calculate Slippage
         px *= (1 + slippage) if is_buy else (1 - slippage)
-        
+
         # Use HyperLiquid's rounding logic: 5 significant figures and 6 decimals for perps, 8 decimals for spot
         decimals = (6 if not is_spot else 8) - sz_decimals
         return round(float(f"{px:.5g}"), max(0, decimals))
