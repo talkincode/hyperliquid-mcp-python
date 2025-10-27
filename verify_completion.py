@@ -4,10 +4,12 @@
 
 def check_constants():
     """检查常量文件是否正确创建"""
-    from services.constants import (ADDRESS_PREFIX_LEN,
-                                    OCO_GROUP_EXISTING_POSITION,
-                                    OCO_GROUP_NEW_POSITION,
-                                    ORDER_TYPE_LIMIT_GTC)
+    from services.constants import (
+        ADDRESS_PREFIX_LEN,
+        OCO_GROUP_EXISTING_POSITION,
+        OCO_GROUP_NEW_POSITION,
+        ORDER_TYPE_LIMIT_GTC,
+    )
 
     assert OCO_GROUP_NEW_POSITION == "normalTpSl", "新仓位分组常量错误"
     assert OCO_GROUP_EXISTING_POSITION == "positionTpSl", "现有仓位分组常量错误"
@@ -17,9 +19,13 @@ def check_constants():
 
 def check_validators():
     """检查验证器是否正确工作"""
-    from services.validators import (ValidationError, validate_coin,
-                                     validate_price, validate_side,
-                                     validate_size)
+    from services.validators import (
+        ValidationError,
+        validate_coin,
+        validate_price,
+        validate_side,
+        validate_size,
+    )
 
     # 测试正常情况
     validate_coin("BTC")

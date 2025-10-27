@@ -1,10 +1,15 @@
 """常量测试"""
 
-from services.constants import (ADDRESS_PREFIX_LEN, ADDRESS_SUFFIX_LEN,
-                                AGGRESSIVE_SLIPPAGE, DEFAULT_SLIPPAGE,
-                                OCO_GROUP_EXISTING_POSITION,
-                                OCO_GROUP_NEW_POSITION, ORDER_TYPE_LIMIT_GTC,
-                                ORDER_TYPE_LIMIT_IOC)
+from services.constants import (
+    ADDRESS_PREFIX_LEN,
+    ADDRESS_SUFFIX_LEN,
+    AGGRESSIVE_SLIPPAGE,
+    DEFAULT_SLIPPAGE,
+    OCO_GROUP_EXISTING_POSITION,
+    OCO_GROUP_NEW_POSITION,
+    ORDER_TYPE_LIMIT_GTC,
+    ORDER_TYPE_LIMIT_IOC,
+)
 
 
 def test_oco_group_constants():

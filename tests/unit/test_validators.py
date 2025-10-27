@@ -2,9 +2,14 @@
 
 import pytest
 
-from services.validators import (ValidationError, validate_coin,
-                                 validate_order_inputs, validate_price,
-                                 validate_side, validate_size)
+from services.validators import (
+    ValidationError,
+    validate_coin,
+    validate_order_inputs,
+    validate_price,
+    validate_side,
+    validate_size,
+)
 
 
 def test_validate_size_zero():

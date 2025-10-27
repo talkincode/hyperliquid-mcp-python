@@ -5,14 +5,20 @@ from typing import Any, Dict, Optional, Union
 from hyperliquid.exchange import Exchange
 from hyperliquid.info import Info
 from hyperliquid.utils import constants as hl_constants
-from hyperliquid.utils.signing import (order_request_to_order_wire,
-                                       order_wires_to_order_action,
-                                       sign_l1_action)
+from hyperliquid.utils.signing import (
+    order_request_to_order_wire,
+    order_wires_to_order_action,
+    sign_l1_action,
+)
 from hyperliquid.utils.types import Cloid
 
-from .constants import (ADDRESS_PREFIX_LEN, ADDRESS_SUFFIX_LEN,
-                        OCO_GROUP_EXISTING_POSITION, OCO_GROUP_NEW_POSITION,
-                        ORDER_TYPE_LIMIT_GTC)
+from .constants import (
+    ADDRESS_PREFIX_LEN,
+    ADDRESS_SUFFIX_LEN,
+    OCO_GROUP_EXISTING_POSITION,
+    OCO_GROUP_NEW_POSITION,
+    ORDER_TYPE_LIMIT_GTC,
+)
 
 
 class HyperliquidServices:

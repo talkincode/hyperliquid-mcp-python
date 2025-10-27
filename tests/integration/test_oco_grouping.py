@@ -4,8 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from services.constants import (OCO_GROUP_EXISTING_POSITION,
-                                OCO_GROUP_NEW_POSITION)
+from services.constants import OCO_GROUP_EXISTING_POSITION, OCO_GROUP_NEW_POSITION
 from services.hyperliquid_services import HyperliquidServices
 
 
