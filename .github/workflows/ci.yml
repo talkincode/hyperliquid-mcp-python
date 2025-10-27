@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Test Python ${{ matrix.python-version }}
+    name: test (${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -42,7 +42,7 @@ jobs:
         uv run pytest tests/unit/test_constants.py -v
 
   lint:
-    name: Code Quality
+    name: lint
     runs-on: ubuntu-latest
     
     steps:
@@ -63,15 +63,13 @@ jobs:
     - name: Check code formatting with black
       run: |
         uv run black --check .
-      continue-on-error: true
     
     - name: Check imports with isort
       run: |
         uv run isort --check-only .
-      continue-on-error: true
 
   build:
-    name: Build Package
+    name: build
     runs-on: ubuntu-latest
     needs: [test, lint]
     
