@@ -62,14 +62,33 @@ echo "🔧 正在配置分支保护..."
 gh api \
   --method PUT \
   -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
   repos/$OWNER/$REPO/branches/$BRANCH/protection \
-  -f required_status_checks='{"strict":true,"checks":[{"context":"test (3.10)"},{"context":"test (3.11)"},{"context":"test (3.12)"},{"context":"test (3.13)"},{"context":"lint"},{"context":"build"}]}' \
-  -f enforce_admins=true \
-  -f required_pull_request_reviews='{"dismiss_stale_reviews":true,"require_code_owner_reviews":false,"required_approving_review_count":1}' \
-  -f restrictions=null \
-  -F required_conversation_resolution=true \
-  -F allow_force_pushes=false \
-  -F allow_deletions=false
+  --input - <<EOF
+{
+  "required_status_checks": {
+    "strict": true,
+    "checks": [
+      {"context": "test (3.10)"},
+      {"context": "test (3.11)"},
+      {"context": "test (3.12)"},
+      {"context": "test (3.13)"},
+      {"context": "lint"},
+      {"context": "build"}
+    ]
+  },
+  "enforce_admins": true,
+  "required_pull_request_reviews": {
+    "dismiss_stale_reviews": true,
+    "require_code_owner_reviews": false,
+    "required_approving_review_count": 1
+  },
+  "restrictions": null,
+  "required_conversation_resolution": true,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+EOF
 
 if [ $? -eq 0 ]; then
     echo ""
