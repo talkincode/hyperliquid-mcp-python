@@ -1,4 +1,3 @@
-````markdown
 # HyperLiquid MCP Server
 
 基于 FastMCP 的 HyperLiquid 交易 MCP 服务器。为 AI 助手提供与 HyperLiquid 永续合约和现货交易平台交互的工具。
