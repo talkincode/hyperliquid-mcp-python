@@ -92,17 +92,17 @@ git tag -a vx.y.z -m "Release vx.y.z"
 git push origin vx.y.z
 ```
 
-### 6. 创建 GitHub Release
-- 使用 GitHub API 创建 Release
-- 标签：`vx.y.z`
-- 标题：`Release vx.y.z` 或自定义标题
-- 内容：第 4 步生成的 Release Notes
-- 发布后，GitHub Actions 会自动触发 PyPI 发布
+**推送标签后会自动触发**：
+1. 构建 Python 包
+2. 发布到 PyPI
+3. 创建 GitHub Release（从 CHANGELOG.md 提取发布说明）
+4. 上传构建产物（wheel 和 sdist）到 Release
 
-### 7. 验证发布
+### 6. 验证发布
 - 等待 GitHub Actions 完成（检查 workflow 状态）
-- 提供 PyPI 链接：`https://pypi.org/project/hyperliquid-mcp-python/x.y.z/`
-- 提供 GitHub Release 链接
+- 验证 PyPI 发布：`https://pypi.org/project/hyperliquid-mcp-python/x.y.z/`
+- 验证 GitHub Release：`https://github.com/talkincode/hyperliquid-mcp-python/releases/tag/vx.y.z`
+- 确认 Release 包含构建产物附件
 
 ## 注意事项
 
