@@ -1,6 +1,6 @@
 [project]
 name = "hyperliquid-mcp-python"
-version = "0.1.4"
+version = "0.2.0"
 description = "HyperLiquid MCP Server with FastMCP - Trading tools and account management"
 authors = [
     {name = "jettwang", email = "jamiesun.net@gmail.com"}
