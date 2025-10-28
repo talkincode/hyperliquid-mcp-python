@@ -781,6 +781,23 @@ def start_server():
         )
         logger.info(f"Logs will be written to: {log_path}")
 
+        # Log all registered tools BEFORE starting server
+        if hasattr(mcp, "_tool_manager") and hasattr(mcp._tool_manager, "_tools"):
+            tools_dict = mcp._tool_manager._tools
+            tool_names = sorted(tools_dict.keys())
+
+            print("\n" + "=" * 60)
+            print(f"✅ {len(tool_names)} MCP Tools Registered:")
+            print("=" * 60)
+
+            for i, tool_name in enumerate(tool_names, 1):
+                marker = "🆕" if tool_name == "get_candles_snapshot" else "  "
+                print(f"{marker} {i:2d}. {tool_name}")
+
+            print("=" * 60 + "\n")
+        else:
+            print("\n⚠️  Cannot verify tool registration\n")
+
         asyncio.run(run_as_server())
     except Exception as e:
         logger.error(f"Failed to start server: {e}")
