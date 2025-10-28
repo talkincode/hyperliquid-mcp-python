@@ -1,0 +1,106 @@
+site_name: HyperLiquid MCP Server
+site_description: FastMCP-based trading server for HyperLiquid perpetual and spot trading
+site_author: TalkingData
+site_url: https://talkincode.github.io/hyperliquid-mcp-python/
+
+repo_name: talkincode/hyperliquid-mcp-python
+repo_url: https://github.com/talkincode/hyperliquid-mcp-python
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: zh
+  palette:
+    # 浅色模式
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: 切换到暗色模式
+    # 暗色模式
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: 切换到浅色模式
+
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    - content.code.copy
+    - content.code.annotate
+
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search:
+      lang:
+        - zh
+        - en
+  - minify:
+      minify_html: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.emoji:
+    emoji_index: material.extensions.emoji.twemoji
+    emoji_generator: material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - 首页: index.md
+  - 快速开始:
+      - 安装: getting-started/installation.md
+      - 配置: getting-started/configuration.md
+      - 快速验证: getting-started/quick-start.md
+  - 使用指南:
+      - MCP 客户端集成: guides/mcp-integration.md
+      - 交易工具: guides/trading-tools.md
+      - 账户管理: guides/account-management.md
+      - 市场数据: guides/market-data.md
+      - 常见用例: guides/use-cases.md
+  - API 参考:
+      - 工具列表: api/tools-reference.md
+      - 返回格式: api/response-format.md
+      - 错误处理: api/error-handling.md
+  - 开发者:
+    - 贡献指南: developers/contributing.md
+  - 故障排除: troubleshooting.md
+  - 更新日志: changelog.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/talkincode/hyperliquid-mcp-python
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/hyperliquid-mcp-python/
+
+  version:
+    provider: mike
+
+copyright: Copyright &copy; 2024 TalkingData

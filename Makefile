@@ -59,6 +59,12 @@ help:
 	@echo "  make publish          - 发布到 PyPI"
 	@echo "  make version          - 显示当前版本"
 	@echo ""
+	@echo "文档:"
+	@echo "  make docs-install     - 安装文档依赖"
+	@echo "  make docs-serve       - 本地预览文档 ⭐"
+	@echo "  make docs-build       - 构建文档"
+	@echo "  make docs-deploy      - 部署到 GitHub Pages"
+	@echo ""
 	@echo "快捷命令:"
 	@echo "  make all              - clean + build"
 	@echo "  make release          - clean + build + publish"
@@ -280,3 +286,36 @@ full-release:
 	@echo "🎉 发布完成！别忘了："
 	@echo "   git push origin main"
 	@echo "   git push origin v$$(grep '^version = ' pyproject.toml | cut -d'"' -f2)"
+
+# ============================================================================
+# 文档命令
+# ============================================================================
+
+# 安装文档依赖
+docs-install:
+	@echo "📦 安装文档依赖..."
+	pip install -r docs-requirements.txt
+
+# 本地预览文档
+docs-serve:
+	@echo "🌐 启动文档服务器..."
+	@echo "📖 浏览器访问 http://127.0.0.1:8000"
+	mkdocs serve
+
+# 构建文档
+docs-build:
+	@echo "📚 构建文档..."
+	mkdocs build
+	@echo "✅ 文档已构建到 site/ 目录"
+
+# 部署文档到 GitHub Pages
+docs-deploy:
+	@echo "🚀 部署文档到 GitHub Pages..."
+	mkdocs gh-deploy --force
+	@echo "✅ 文档已部署"
+
+# 清理文档构建
+docs-clean:
+	@echo "🧹 清理文档构建..."
+	rm -rf site/
+	@echo "✅ 清理完成"

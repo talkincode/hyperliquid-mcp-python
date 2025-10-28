@@ -44,4 +44,8 @@ env/
 .DS_Store
 Thumbs.db
 
+# MkDocs
+site/
+.cache/
+
 test.py
