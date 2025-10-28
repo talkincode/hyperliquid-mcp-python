@@ -12,9 +12,9 @@ print(f"OCO_GROUP_EXISTING_POSITION = {repr(OCO_GROUP_EXISTING_POSITION)}")
 
 # 验证与 SDK 定义一致
 assert OCO_GROUP_NEW_POSITION == "normalTpsl", f"错误: {OCO_GROUP_NEW_POSITION}"
-assert (
-    OCO_GROUP_EXISTING_POSITION == "positionTpsl"
-), f"错误: {OCO_GROUP_EXISTING_POSITION}"
+assert OCO_GROUP_EXISTING_POSITION == "positionTpsl", (
+    f"错误: {OCO_GROUP_EXISTING_POSITION}"
+)
 
 print("\n✅ 所有常量值正确!")
 print("✅ 与 HyperLiquid SDK Grouping 类型定义一致 (小写 's')")

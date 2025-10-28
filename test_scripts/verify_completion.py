@@ -12,9 +12,9 @@ def check_constants():
 
     # 必须与 HyperLiquid SDK 中的 Grouping 类型定义完全一致(小写 's')
     assert OCO_GROUP_NEW_POSITION == "normalTpsl", "新仓位分组常量错误(应为小写s)"
-    assert (
-        OCO_GROUP_EXISTING_POSITION == "positionTpsl"
-    ), "现有仓位分组常量错误(应为小写s)"
+    assert OCO_GROUP_EXISTING_POSITION == "positionTpsl", (
+        "现有仓位分组常量错误(应为小写s)"
+    )
     assert ADDRESS_PREFIX_LEN == 6, "地址前缀长度常量错误"
     print("✅ 常量检查通过")
 
