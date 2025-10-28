@@ -1,0 +1,30 @@
+# 构建文档网站
+.PHONY: docs-build
+docs-build:
+	@echo "📚 Building documentation..."
+	mkdocs build
+
+# 本地预览文档
+.PHONY: docs-serve
+docs-serve:
+	@echo "🌐 Starting documentation server..."
+	@echo "📖 Open http://127.0.0.1:8000 in your browser"
+	mkdocs serve
+
+# 部署文档到 GitHub Pages
+.PHONY: docs-deploy
+docs-deploy:
+	@echo "🚀 Deploying documentation to GitHub Pages..."
+	mkdocs gh-deploy --force
+
+# 安装文档依赖
+.PHONY: docs-install
+docs-install:
+	@echo "📦 Installing documentation dependencies..."
+	pip install -r docs-requirements.txt
+
+# 清理文档构建
+.PHONY: docs-clean
+docs-clean:
+	@echo "🧹 Cleaning documentation build..."
+	rm -rf site/
