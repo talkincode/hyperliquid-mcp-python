@@ -12,10 +12,11 @@ from services.constants import (
 )
 
 
-def test_oco_group_constants():
-    """测试 OCO 分组常量值"""
-    assert OCO_GROUP_NEW_POSITION == "normalTpSl"
-    assert OCO_GROUP_EXISTING_POSITION == "positionTpSl"
+def test_oco_grouping_constants():
+    """测试 OCO 分组常量与 SDK 定义一致"""
+    # 必须与 HyperLiquid SDK 中的 Grouping 类型定义完全一致
+    assert OCO_GROUP_NEW_POSITION == "normalTpsl"  # 注意小写 's'
+    assert OCO_GROUP_EXISTING_POSITION == "positionTpsl"  # 注意小写 's'
 
 
 def test_order_type_constants():
