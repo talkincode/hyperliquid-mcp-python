@@ -20,9 +20,9 @@ classifiers = [
     "Topic :: Office/Business :: Financial",
 ]
 dependencies = [
-    "fastmcp>=2.9.2",
+    "fastmcp>=2.13.0.1",
     "hyperliquid-python-sdk>=0.15.0",
-    "python-dotenv>=1.0.0",
+    "python-dotenv>=1.2.1",
     "pydantic>=2.0.0",
 ]
 
