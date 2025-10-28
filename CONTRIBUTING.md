@@ -111,7 +111,7 @@ docs: 更新 README 安装说明
 
 如有问题,请:
 
-- 查看 [README.md](README.md) 和 [EXAMPLES.md](EXAMPLES.md)
+- 查看 [README.md](README.md)
 - 在 GitHub Issues 中提问
 - 查看现有的 Pull Requests
 
