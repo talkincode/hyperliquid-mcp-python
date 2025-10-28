@@ -788,20 +788,17 @@ class HyperliquidServices:
 
             # Add take profit order if specified
             if tp_px is not None:
-                # For TP orders, use tick-aligned aggressive price
-                # If closing long (sell), use very low price; if closing short (buy), use very high price
-                slippage = 0.5  # 50% slippage for very aggressive pricing
-                aggressive_px = self._slippage_price(coin, not is_long, slippage)
-
+                # For TP orders, use limit order at trigger price
+                # This ensures the order fills at or better than the TP price
                 tp_order = {
                     "coin": coin,
                     "is_buy": not is_long,
                     "sz": float(position_size),
-                    "limit_px": aggressive_px,  # Tick-aligned aggressive price for market execution
+                    "limit_px": float(tp_px),  # Limit price = trigger price for TP
                     "order_type": {
                         "trigger": {
                             "triggerPx": float(tp_px),
-                            "isMarket": True,
+                            "isMarket": False,  # Use limit order for TP
                             "tpsl": "tp",
                         }
                     },
@@ -812,19 +809,17 @@ class HyperliquidServices:
 
             # Add stop loss order if specified
             if sl_px is not None:
-                # For SL orders, use tick-aligned aggressive price
-                slippage = 0.5  # 50% slippage for very aggressive pricing
-                aggressive_px = self._slippage_price(coin, not is_long, slippage)
-
+                # For SL orders, use market order for fast execution
+                # No limit_px needed when isMarket=True
                 sl_order = {
                     "coin": coin,
                     "is_buy": not is_long,
                     "sz": float(position_size),
-                    "limit_px": aggressive_px,  # Tick-aligned aggressive price for market execution
+                    "limit_px": float(sl_px),  # Use trigger price as limit_px
                     "order_type": {
                         "trigger": {
                             "triggerPx": float(sl_px),
-                            "isMarket": True,
+                            "isMarket": True,  # Use market order for SL
                             "tpsl": "sl",
                         }
                     },
