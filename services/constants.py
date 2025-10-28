@@ -1,8 +1,10 @@
 """HyperLiquid MCP 常量定义"""
 
 # OCO 订单分组类型
-OCO_GROUP_NEW_POSITION = "normalTpSl"  # 新仓位的括号订单
-OCO_GROUP_EXISTING_POSITION = "positionTpSl"  # 现有仓位的止盈止损
+# 注意: 必须与 HyperLiquid SDK 中的 Grouping 类型定义一致
+# SDK 定义: Literal["na"], Literal["normalTpsl"], Literal["positionTpsl"]
+OCO_GROUP_NEW_POSITION = "normalTpsl"  # 新仓位的括号订单 (小写 s)
+OCO_GROUP_EXISTING_POSITION = "positionTpsl"  # 现有仓位的止盈止损 (小写 s)
 
 # 订单类型常量
 ORDER_TYPE_LIMIT_GTC = {"limit": {"tif": "Gtc"}}

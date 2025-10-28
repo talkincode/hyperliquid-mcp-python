@@ -810,12 +810,12 @@ class HyperliquidServices:
             # Add stop loss order if specified
             if sl_px is not None:
                 # For SL orders, use market order for fast execution
-                # No limit_px needed when isMarket=True
+                # When isMarket=True, limit_px should be 0 or the trigger price
                 sl_order = {
                     "coin": coin,
                     "is_buy": not is_long,
                     "sz": float(position_size),
-                    "limit_px": float(sl_px),  # Use trigger price as limit_px
+                    "limit_px": float(sl_px),  # For market orders, use trigger price
                     "order_type": {
                         "trigger": {
                             "triggerPx": float(sl_px),
