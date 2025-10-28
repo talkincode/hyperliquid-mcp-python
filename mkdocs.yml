@@ -64,8 +64,8 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.emoji:
-    emoji_index: material.extensions.emoji.twemoji
-    emoji_generator: material.extensions.emoji.to_svg
+    emoji_index: "material.extensions.emoji.twemoji"
+    emoji_generator: "material.extensions.emoji.to_svg"
   - attr_list
   - md_in_html
   - tables
@@ -82,8 +82,6 @@ nav:
       - MCP 客户端集成: guides/mcp-integration.md
       - 交易工具: guides/trading-tools.md
       - 账户管理: guides/account-management.md
-      - 市场数据: guides/market-data.md
-      - 常见用例: guides/use-cases.md
   - API 参考:
       - 工具列表: api/tools-reference.md
       - 返回格式: api/response-format.md
