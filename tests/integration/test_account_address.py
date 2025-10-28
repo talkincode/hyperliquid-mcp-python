@@ -15,7 +15,6 @@ async def test_account_address_fallback_to_wallet():
         patch("services.hyperliquid_services.Exchange"),
         patch("eth_account.Account") as mock_account_class,
     ):
-
         # Mock wallet
         mock_wallet = MagicMock()
         mock_wallet.address = "0xWALLET_ADDRESS_12345"
@@ -41,7 +40,6 @@ async def test_account_address_uses_provided():
         patch("services.hyperliquid_services.Exchange"),
         patch("eth_account.Account") as mock_account_class,
     ):
-
         # Mock wallet
         mock_wallet = MagicMock()
         mock_wallet.address = "0xWALLET_ADDRESS_12345"
@@ -66,7 +64,6 @@ async def test_account_address_not_none():
         patch("services.hyperliquid_services.Exchange"),
         patch("eth_account.Account") as mock_account_class,
     ):
-
         # Mock wallet
         mock_wallet = MagicMock()
         mock_wallet.address = "0xWALLET_ADDRESS_12345"

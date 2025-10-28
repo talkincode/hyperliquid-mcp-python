@@ -2,6 +2,7 @@
 """
 HyperLiquid 测试工具 - 交互式测试各种功能
 """
+
 import asyncio
 import sys
 from pathlib import Path
@@ -53,7 +54,7 @@ async def main_loop():
             result = await main.hyperliquid_service.get_account_balance()
             if result.get("success"):
                 data = result.get("data", {})
-                print(f"\n✅ 账户余额:")
+                print("\n✅ 账户余额:")
                 print(f"   总权益: ${data.get('account_value', 'N/A')}")
                 print(f"   可用余额: ${data.get('withdrawable', 'N/A')}")
                 print(f"   保证金使用: ${data.get('margin_used', 'N/A')}")
@@ -120,10 +121,10 @@ async def main_loop():
             positions = await main.hyperliquid_service.get_open_positions()
             orders = await main.hyperliquid_service.get_open_orders()
 
-            print(f"\n✅ 账户摘要:")
+            print("\n✅ 账户摘要:")
             if balance.get("success"):
                 data = balance.get("data", {})
-                print(f"\n   余额:")
+                print("\n   余额:")
                 print(f"     总权益: ${data.get('account_value', 'N/A')}")
                 print(f"     可用: ${data.get('withdrawable', 'N/A')}")
 
@@ -149,7 +150,7 @@ async def main_loop():
                     if price != "N/A":
                         price = float(price)
                         token_amount = dollar_amount / price
-                        print(f"\n✅ 计算结果:")
+                        print("\n✅ 计算结果:")
                         print(f"   当前价格: ${price}")
                         print(f"   美元金额: ${dollar_amount}")
                         print(f"   代币数量: {token_amount:.8f} {coin}")
@@ -168,7 +169,7 @@ async def main_loop():
             result = await main.hyperliquid_service.get_orderbook("BTC", depth=10)
             if result.get("success"):
                 data = result.get("orderbook", {})
-                print(f"\n✅ BTC 订单簿 (前10档):")
+                print("\n✅ BTC 订单簿 (前10档):")
 
                 bids = data.get("bids", [])
                 asks = data.get("asks", [])

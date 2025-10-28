@@ -2,6 +2,7 @@
 """
 测试资金费率历史获取
 """
+
 import asyncio
 import sys
 from pathlib import Path
@@ -41,11 +42,11 @@ async def test_funding_history():
         funding_data = result.get("funding_history", [])
 
         if not funding_data:
-            print(f"⚠️  未找到资金费率数据\n")
+            print("⚠️  未找到资金费率数据\n")
             continue
 
         # 显示最近的资金费率记录
-        print(f"\n最近 10 条记录:\n")
+        print("\n最近 10 条记录:\n")
         print(f"{'时间':<20} {'费率 (%)':<15} {'年化 (%)':<15}")
         print("-" * 70)
 
@@ -57,7 +58,7 @@ async def test_funding_history():
             funding_rate = record.get("funding", "N/A")
 
             # 将时间戳转换为可读格式
-            if time != "N/A" and isinstance(time, (int, float)):
+            if time != "N/A" and isinstance(time, int | float):
                 from datetime import datetime
 
                 dt = datetime.fromtimestamp(time / 1000)  # 毫秒转秒
@@ -72,7 +73,7 @@ async def test_funding_history():
                     rate_pct = rate * 100
                     annualized = rate * 3 * 365 * 100  # 年化百分比
                     print(f"{time_str:<20} {rate_pct:>12.6f}% {annualized:>12.2f}%")
-                except:
+                except (ValueError, TypeError):
                     print(f"{time_str:<20} {funding_rate:<15} {'N/A':<15}")
             else:
                 print(f"{time_str:<20} {'N/A':<15} {'N/A':<15}")

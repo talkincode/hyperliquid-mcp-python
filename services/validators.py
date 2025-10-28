@@ -1,7 +1,5 @@
 """输入验证工具"""
 
-from typing import Optional
-
 
 class ValidationError(ValueError):
     """验证错误"""
@@ -17,7 +15,7 @@ def validate_coin(coin: str) -> None:
         raise ValidationError(f"invalid coin format: {coin}")
 
 
-def validate_side(side: str, is_buy: Optional[bool] = None) -> bool:
+def validate_side(side: str, is_buy: bool | None = None) -> bool:
     """验证订单方向
 
     Returns:
@@ -34,7 +32,7 @@ def validate_side(side: str, is_buy: Optional[bool] = None) -> bool:
 
 def validate_size(size: float, min_size: float = 0.0) -> None:
     """验证订单大小（代币数量，非美元金额）"""
-    if not isinstance(size, (int, float)):
+    if not isinstance(size, int | float):
         raise ValidationError(f"size must be numeric, got: {type(size).__name__}")
     if size <= min_size:
         raise ValidationError(
@@ -44,14 +42,14 @@ def validate_size(size: float, min_size: float = 0.0) -> None:
 
 def validate_price(price: float) -> None:
     """验证价格"""
-    if not isinstance(price, (int, float)):
+    if not isinstance(price, int | float):
         raise ValidationError(f"price must be numeric, got: {type(price).__name__}")
     if price <= 0:
         raise ValidationError(f"price must be > 0, got: {price}")
 
 
 def validate_order_inputs(
-    coin: str, side: str, size: float, price: Optional[float] = None
+    coin: str, side: str, size: float, price: float | None = None
 ) -> dict:
     """综合验证订单输入
 

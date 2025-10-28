@@ -47,16 +47,17 @@ help:
 	@echo "  make test-interactive - 交互式测试工具"
 	@echo ""
 	@echo "代码质量:"
-	@echo "  make lint             - 运行代码检查"
-	@echo "  make format           - 格式化代码"
-	@echo "  make check            - 检查代码但不修改"
-	@echo "  make test             - 运行单元测试"
+	@echo "  make lint             - 运行代码检查 (Ruff)"
+	@echo "  make format           - 格式化代码 (Ruff)"
+	@echo "  make check            - 检查代码但不修改 (Ruff)"
+	@echo "  make pre-commit       - 运行 pre-commit 检查"
+	@echo "  make test             - 运行单元测试 (pytest)"
 	@echo ""
 	@echo "构建和发布:"
 	@echo "  make clean            - 清理构建文件"
 	@echo "  make build            - 构建发布包"
 	@echo "  make publish          - 发布到 PyPI"
-	@echo "  make test-pypi        - 发布到测试 PyPI"
+	@echo "  make version          - 显示当前版本"
 	@echo ""
 	@echo "快捷命令:"
 	@echo "  make all              - clean + build"
@@ -110,33 +111,23 @@ config:
 # 代码质量
 # ============================================================================
 
-# 代码格式化
+# 代码格式化 (使用 Ruff)
 format:
-	uv run black .
-	uv run isort .
+	uv run ruff format .
+	uv run ruff check --fix .
 
 # 代码检查(不修改)
 check:
-	uv run black --check .
-	uv run isort --check-only .
+	uv run ruff format --check .
+	uv run ruff check .
 
 # 代码检查(带 lint)
 lint: check
 	@echo "✅ 代码检查通过"
 
-# 设置 pre-commit hooks
-pre-commit-install:
-	uv run pre-commit install
-	@echo "✅ Pre-commit hooks 已安装"
-	@echo "现在每次 git commit 时都会自动运行代码检查和格式化"
-
-# 运行 pre-commit 检查所有文件
-pre-commit-all:
+# 运行 pre-commit 检查
+pre-commit:
 	uv run pre-commit run --all-files
-
-# 更新 pre-commit hooks
-pre-commit-update:
-	uv run pre-commit autoupdate
 
 # ============================================================================
 # 文档和帮助
@@ -145,14 +136,6 @@ pre-commit-update:
 # 显示测试脚本帮助
 test-help:
 	@cat test_scripts/QUICK_REFERENCE.md
-
-# 显示完整 README
-docs:
-	@cat README.md
-
-# 显示测试文档
-test-docs:
-	@cat test_scripts/README.md
 
 # 列出所有可用的测试脚本
 list-tests:
@@ -172,8 +155,7 @@ list-tests:
 
 # 运行单元测试
 test:
-	@echo "⚠️  暂无单元测试，跳过"
-	@# uv run pytest
+	uv run pytest
 
 # 运行所有只读测试
 test-all:
@@ -244,12 +226,6 @@ build: clean
 	@echo "✅ 构建完成"
 	@ls -lh dist/
 
-# 发布到测试 PyPI
-test-pypi: build
-	uv run twine upload --repository testpypi dist/*
-	@echo "✅ 已发布到测试 PyPI"
-	@echo "查看: https://test.pypi.org/project/hyperliquid-mcp-python/"
-
 # 发布到正式 PyPI
 publish: build
 	@echo "⚠️  即将发布到正式 PyPI，请确认："
@@ -267,23 +243,9 @@ all: clean build
 # 快捷命令：完整发布流程
 release: clean build publish
 
-# 检查 uv 是否安装
-check-uv:
-	@which uv > /dev/null || (echo "❌ uv 未安装，请访问: https://github.com/astral-sh/uv" && exit 1)
-
 # 显示版本信息
 version:
 	@grep '^version = ' pyproject.toml | cut -d'"' -f2
-
-# 缓存清理
-cache-clean:
-	uv cache clean
-	@echo "✅ UV 缓存已清理"
-
-# 测试 uvx 安装
-test-uvx:
-	@echo "测试 uvx 安装..."
-	uvx --python 3.13 --from hyperliquid-mcp-python hyperliquid-mcp --version
 
 # 本地测试安装
 test-install: build
@@ -302,7 +264,7 @@ tag:
 	echo "推送标签: git push origin v$$VERSION"
 
 # 完整发布流程（包含 git）
-full-release: check-uv
+full-release:
 	@echo "🚀 开始完整发布流程..."
 	@$(MAKE) clean
 	@$(MAKE) build

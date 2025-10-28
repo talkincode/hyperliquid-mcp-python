@@ -2,6 +2,7 @@
 """
 检查详细余额信息
 """
+
 import asyncio
 import json
 import sys

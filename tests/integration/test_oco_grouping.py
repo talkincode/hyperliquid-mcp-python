@@ -16,7 +16,6 @@ def mock_service():
         patch("services.hyperliquid_services.Exchange"),
         patch("eth_account.Account") as mock_account_class,
     ):
-
         # Mock wallet
         mock_wallet = MagicMock()
         mock_wallet.address = "0xTEST_WALLET_ADDRESS"
@@ -50,7 +49,7 @@ async def test_bracket_order_uses_correct_grouping(mock_service, monkeypatch):
     )
 
     assert captured_grouping == OCO_GROUP_NEW_POSITION
-    assert result["success"] == True
+    assert result["success"]
     assert result["order_details"]["grouping"] == OCO_GROUP_NEW_POSITION
 
 
@@ -83,5 +82,5 @@ async def test_set_position_tpsl_uses_correct_grouping(mock_service, monkeypatch
     result = await mock_service.set_position_tpsl(coin="BTC", tp_px=47000, sl_px=43000)
 
     assert captured_grouping == OCO_GROUP_EXISTING_POSITION
-    assert result["success"] == True
+    assert result["success"]
     assert result["position_details"]["grouping"] == OCO_GROUP_EXISTING_POSITION

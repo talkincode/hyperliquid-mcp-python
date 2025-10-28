@@ -2,6 +2,7 @@
 """
 测试市场数据获取功能
 """
+
 import asyncio
 import sys
 from pathlib import Path

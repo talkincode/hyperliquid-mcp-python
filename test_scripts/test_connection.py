@@ -2,6 +2,7 @@
 """
 测试 HyperLiquid 配置和连接
 """
+
 import asyncio
 import sys
 from pathlib import Path
@@ -54,7 +55,7 @@ async def test_configuration():
         balance = await main.hyperliquid_service.get_account_balance()
         if balance.get("success"):
             data = balance.get("data", {})
-            print(f"✅ 账户余额:")
+            print("✅ 账户余额:")
             print(f"   总权益: ${data.get('account_value', 'N/A')}")
             print(f"   可用余额: ${data.get('withdrawable', 'N/A')}")
             print(f"   保证金使用: ${data.get('margin_used', 'N/A')}")
@@ -121,7 +122,7 @@ async def test_configuration():
         market_data = await main.hyperliquid_service.get_market_data("BTC")
         if market_data.get("success"):
             data = market_data.get("market_data", {})
-            print(f"✅ BTC 市场数据:")
+            print("✅ BTC 市场数据:")
             print(f"   当前价格: ${data.get('mid_price', 'N/A')}")
             print(f"   24h成交量: ${data.get('day_ntl_vlm', 'N/A')}")
             print(f"   资金费率: {data.get('funding', 'N/A')}")
@@ -162,14 +163,14 @@ async def test_configuration():
         }
 
         if summary.get("success"):
-            print(f"✅ 账户摘要:")
+            print("✅ 账户摘要:")
             print(
                 f"   账户价值: ${summary['summary']['balance'].get('account_value', 'N/A')}"
             )
             print(f"   持仓数: {summary['summary']['total_positions']}")
             print(f"   订单数: {summary['summary']['total_orders']}")
         else:
-            print(f"❌ 获取账户摘要失败")
+            print("❌ 获取账户摘要失败")
             return False
     except Exception as e:
         print(f"❌ 获取账户摘要异常: {e}")

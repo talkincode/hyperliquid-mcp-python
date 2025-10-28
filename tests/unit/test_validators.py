@@ -41,10 +41,10 @@ def test_validate_side_invalid():
 
 def test_validate_side_valid():
     """测试有效的 side"""
-    assert validate_side("buy") == True
-    assert validate_side("BUY") == True
-    assert validate_side("sell") == False
-    assert validate_side("SELL") == False
+    assert validate_side("buy")
+    assert validate_side("BUY")
+    assert not validate_side("sell")
+    assert not validate_side("SELL")
 
 
 def test_validate_coin_empty():
@@ -89,7 +89,7 @@ def test_validate_order_inputs_valid():
     """测试综合验证 - 有效输入"""
     result = validate_order_inputs("BTC", "buy", 0.1, 45000)
     assert result["coin"] == "BTC"
-    assert result["is_buy"] == True
+    assert result["is_buy"]
     assert result["size"] == 0.1
     assert result["price"] == 45000
 
@@ -98,7 +98,7 @@ def test_validate_order_inputs_no_price():
     """测试综合验证 - 无价格"""
     result = validate_order_inputs("ETH", "sell", 1.5)
     assert result["coin"] == "ETH"
-    assert result["is_buy"] == False
+    assert not result["is_buy"]
     assert result["size"] == 1.5
     assert "price" not in result
 
