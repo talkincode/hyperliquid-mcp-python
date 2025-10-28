@@ -8,8 +8,8 @@ HyperLiquid MCP CLI 入口
     hyperliquid-mcp stdio        # 启动 stdio 服务器
     hyperliquid-mcp --help       # 显示帮助
 """
+
 import argparse
-import sys
 
 from main import start_server, stdio_server
 

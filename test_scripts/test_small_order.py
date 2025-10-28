@@ -2,6 +2,7 @@
 """
 测试小额订单 - 验证账户是否真的有余额
 """
+
 import asyncio
 import sys
 from pathlib import Path
@@ -37,13 +38,13 @@ async def test_small_order():
     # 设置一个偏离市价的限价单，这样不会立即成交
     limit_price = current_price * 0.95  # 比市价低 5%
 
-    print(f"\n📊 步骤 2: 尝试下一个测试订单")
+    print("\n📊 步骤 2: 尝试下一个测试订单")
     print("-" * 70)
-    print(f"   币种: BTC")
-    print(f"   方向: 买入 (做多)")
+    print("   币种: BTC")
+    print("   方向: 买入 (做多)")
     print(f"   数量: {test_size:.8f} BTC (约 $5)")
     print(f"   限价: ${limit_price:,.2f} (比市价低 5%，不会立即成交)")
-    print(f"\n这个订单不会立即成交，只是测试账户是否有足够余额...")
+    print("\n这个订单不会立即成交，只是测试账户是否有足够余额...")
 
     confirm = input("\n是否继续测试下单？(yes/no): ").strip().lower()
     if confirm not in ["yes", "y"]:
@@ -67,7 +68,7 @@ async def test_small_order():
         print("  3. ✅ 配置正确")
 
         order_data = result.get("order_result", {})
-        print(f"\n订单详情:")
+        print("\n订单详情:")
         print(f"  状态: {order_data.get('status', 'Unknown')}")
 
         if "response" in order_data and "data" in order_data["response"]:
@@ -77,7 +78,7 @@ async def test_small_order():
                     print(f"  订单状态: {status}")
 
         # 现在取消这个订单
-        print(f"\n现在取消这个测试订单...")
+        print("\n现在取消这个测试订单...")
         cancel_result = await main.hyperliquid_service.cancel_all_orders("BTC")
 
         if cancel_result.get("success"):

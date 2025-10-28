@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 from dotenv import load_dotenv
 from fastmcp import FastMCP
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 mcp = FastMCP("HyperLiquid Trading MCP")
 
 # Global service instance
-hyperliquid_service: Optional[HyperliquidServices] = None
+hyperliquid_service: HyperliquidServices | None = None
 
 
 class ConfigModel(BaseModel):
@@ -37,7 +37,7 @@ class ConfigModel(BaseModel):
 
     private_key: str = Field(..., description="Private key for signing transactions")
     testnet: bool = Field(default=False, description="Use testnet instead of mainnet")
-    account_address: Optional[str] = Field(
+    account_address: str | None = Field(
         default=None,
         description="Account address (derived from private key if not provided)",
     )
@@ -58,7 +58,7 @@ def get_config() -> ConfigModel:
     # Try config file
     config_path = "config.json"
     if os.path.exists(config_path):
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             config_data = json.load(f)
             return ConfigModel(**config_data)
 
@@ -88,28 +88,28 @@ def initialize_service():
 
 
 @mcp.tool
-async def get_account_balance() -> Dict[str, Any]:
+async def get_account_balance() -> dict[str, Any]:
     """Get account balance and margin information"""
     initialize_service()
     return await hyperliquid_service.get_account_balance()
 
 
 @mcp.tool
-async def get_open_positions() -> Dict[str, Any]:
+async def get_open_positions() -> dict[str, Any]:
     """Get all open positions with PnL information"""
     initialize_service()
     return await hyperliquid_service.get_open_positions()
 
 
 @mcp.tool
-async def get_open_orders() -> Dict[str, Any]:
+async def get_open_orders() -> dict[str, Any]:
     """Get all open orders"""
     initialize_service()
     return await hyperliquid_service.get_open_orders()
 
 
 @mcp.tool
-async def get_trade_history(days: int = 7) -> Dict[str, Any]:
+async def get_trade_history(days: int = 7) -> dict[str, Any]:
     """
     Get trade history for the account
 
@@ -130,8 +130,8 @@ async def place_limit_order(
     size: float,
     price: float,
     reduce_only: bool = False,
-    client_order_id: Optional[str] = None,
-) -> Dict[str, Any]:
+    client_order_id: str | None = None,
+) -> dict[str, Any]:
     """
     Place a basic limit order (for opening new positions or manual closing)
 
@@ -172,8 +172,8 @@ async def place_limit_order(
 
 @mcp.tool
 async def market_open_position(
-    coin: str, side: str, size: float, client_order_id: Optional[str] = None
-) -> Dict[str, Any]:
+    coin: str, side: str, size: float, client_order_id: str | None = None
+) -> dict[str, Any]:
     """
     Open a new position at market price using HyperLiquid's market_open for optimal execution
 
@@ -210,8 +210,8 @@ async def market_open_position(
 
 @mcp.tool
 async def market_close_position(
-    coin: str, client_order_id: Optional[str] = None
-) -> Dict[str, Any]:
+    coin: str, client_order_id: str | None = None
+) -> dict[str, Any]:
     """
     Close all positions for a coin at market price using HyperLiquid's market_close
 
@@ -237,8 +237,8 @@ async def place_bracket_order(
     entry_price: float,
     take_profit_price: float,
     stop_loss_price: float,
-    client_order_id: Optional[str] = None,
-) -> Dict[str, Any]:
+    client_order_id: str | None = None,
+) -> dict[str, Any]:
     """
     Place a bracket order for a NEW position (entry + take profit + stop loss in one order)
 
@@ -287,7 +287,7 @@ async def place_bracket_order(
 
 
 @mcp.tool
-async def cancel_order(coin: str, order_id: int) -> Dict[str, Any]:
+async def cancel_order(coin: str, order_id: int) -> dict[str, Any]:
     """
     Cancel a specific order by order ID
 
@@ -300,7 +300,7 @@ async def cancel_order(coin: str, order_id: int) -> Dict[str, Any]:
 
 
 @mcp.tool
-async def cancel_order_by_client_id(coin: str, client_order_id: str) -> Dict[str, Any]:
+async def cancel_order_by_client_id(coin: str, client_order_id: str) -> dict[str, Any]:
     """
     Cancel a specific order by client order ID
 
@@ -313,7 +313,7 @@ async def cancel_order_by_client_id(coin: str, client_order_id: str) -> Dict[str
 
 
 @mcp.tool
-async def cancel_all_orders(coin: Optional[str] = None) -> Dict[str, Any]:
+async def cancel_all_orders(coin: str | None = None) -> dict[str, Any]:
     """
     Cancel all orders, optionally for a specific coin
 
@@ -327,7 +327,7 @@ async def cancel_all_orders(coin: Optional[str] = None) -> Dict[str, Any]:
 @mcp.tool
 async def modify_order(
     coin: str, order_id: int, new_size: float, new_price: float
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Modify an existing order
 
@@ -345,7 +345,7 @@ async def modify_order(
 
 
 @mcp.tool
-async def get_market_data(coin: str) -> Dict[str, Any]:
+async def get_market_data(coin: str) -> dict[str, Any]:
     """
     Get market data for a specific coin
 
@@ -357,7 +357,7 @@ async def get_market_data(coin: str) -> Dict[str, Any]:
 
 
 @mcp.tool
-async def get_orderbook(coin: str, depth: int = 20) -> Dict[str, Any]:
+async def get_orderbook(coin: str, depth: int = 20) -> dict[str, Any]:
     """
     Get orderbook data for a specific coin
 
@@ -370,7 +370,7 @@ async def get_orderbook(coin: str, depth: int = 20) -> Dict[str, Any]:
 
 
 @mcp.tool
-async def get_funding_history(coin: str, days: int = 7) -> Dict[str, Any]:
+async def get_funding_history(coin: str, days: int = 7) -> dict[str, Any]:
     """
     Get funding history for a coin
 
@@ -388,7 +388,7 @@ async def get_funding_history(coin: str, days: int = 7) -> Dict[str, Any]:
 @mcp.tool
 async def update_leverage(
     coin: str, leverage: int, cross_margin: bool = True
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Update leverage for a coin
 
@@ -404,7 +404,7 @@ async def update_leverage(
 @mcp.tool
 async def transfer_between_spot_and_perp(
     amount: float, to_perp: bool = True
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Transfer funds between spot and perpetual accounts
 
@@ -419,10 +419,10 @@ async def transfer_between_spot_and_perp(
 @mcp.tool
 async def set_take_profit_stop_loss(
     coin: str,
-    take_profit_price: Optional[float] = None,
-    stop_loss_price: Optional[float] = None,
-    position_size: Optional[float] = None,
-) -> Dict[str, Any]:
+    take_profit_price: float | None = None,
+    stop_loss_price: float | None = None,
+    position_size: float | None = None,
+) -> dict[str, Any]:
     """
     Set take profit and/or stop loss orders for an EXISTING position (OCO orders)
 
@@ -465,8 +465,8 @@ async def set_take_profit_stop_loss(
 
 @mcp.tool
 async def set_take_profit(
-    coin: str, take_profit_price: float, position_size: Optional[float] = None
-) -> Dict[str, Any]:
+    coin: str, take_profit_price: float, position_size: float | None = None
+) -> dict[str, Any]:
     """
     Set ONLY a take profit order for an EXISTING position
 
@@ -486,8 +486,8 @@ async def set_take_profit(
 
 @mcp.tool
 async def set_stop_loss(
-    coin: str, stop_loss_price: float, position_size: Optional[float] = None
-) -> Dict[str, Any]:
+    coin: str, stop_loss_price: float, position_size: float | None = None
+) -> dict[str, Any]:
     """
     Set ONLY a stop loss order for an EXISTING position
 
@@ -509,7 +509,7 @@ async def set_stop_loss(
 
 
 @mcp.tool
-async def get_account_summary() -> Dict[str, Any]:
+async def get_account_summary() -> dict[str, Any]:
     """Get a comprehensive account summary including balance, positions, and orders"""
     initialize_service()
 
@@ -537,7 +537,7 @@ async def get_account_summary() -> Dict[str, Any]:
 
 
 @mcp.tool
-async def close_position(coin: str, percentage: float = 100.0) -> Dict[str, Any]:
+async def close_position(coin: str, percentage: float = 100.0) -> dict[str, Any]:
     """
     Close a position (full or partial)
 
@@ -568,7 +568,7 @@ async def close_position(coin: str, percentage: float = 100.0) -> Dict[str, Any]
 @mcp.tool
 async def calculate_token_amount_from_dollars(
     coin: str, dollar_amount: float
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Calculate how many tokens can be bought with a given dollar amount
 

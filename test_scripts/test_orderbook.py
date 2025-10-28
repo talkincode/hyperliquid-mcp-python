@@ -2,6 +2,7 @@
 """
 测试订单簿数据获取
 """
+
 import asyncio
 import sys
 from pathlib import Path
@@ -50,7 +51,6 @@ async def test_orderbook():
     for ask in display_asks:
         price = float(ask.get("px", 0))
         size = float(ask.get("sz", 0))
-        total_value = price * size
         print(f"{'🔴 SELL':<30} ${price:>15,.2f} {size:>12.6f} BTC")
 
     print("-" * 70)
@@ -66,7 +66,6 @@ async def test_orderbook():
     for bid in display_bids:
         price = float(bid.get("px", 0))
         size = float(bid.get("sz", 0))
-        total_value = price * size
         print(f"{'🟢 BUY':<30} ${price:>15,.2f} {size:>12.6f} BTC")
 
     # 计算买卖价差

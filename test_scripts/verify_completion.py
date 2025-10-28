@@ -8,7 +8,6 @@ def check_constants():
         ADDRESS_PREFIX_LEN,
         OCO_GROUP_EXISTING_POSITION,
         OCO_GROUP_NEW_POSITION,
-        ORDER_TYPE_LIMIT_GTC,
     )
 
     assert OCO_GROUP_NEW_POSITION == "normalTpSl", "新仓位分组常量错误"
@@ -29,39 +28,39 @@ def check_validators():
 
     # 测试正常情况
     validate_coin("BTC")
-    assert validate_side("buy") == True
-    assert validate_side("sell") == False
+    assert validate_side("buy")
+    assert not validate_side("sell")
     validate_size(0.1)
     validate_price(100.0)
 
-    # 测试错误情况
+    # 测试异常情况
     try:
         validate_size(0)
-        assert False, "应该抛出 ValidationError"
+        raise AssertionError("应该抛出 ValidationError")
     except ValidationError:
         pass
 
     try:
         validate_side("long")
-        assert False, "应该抛出 ValidationError"
+        raise AssertionError("应该抛出 ValidationError")
     except ValidationError:
         pass
 
     print("✅ 验证器检查通过")
 
 
-def check_imports():
+def test_imports():
     """检查所有新模块可以正确导入"""
     try:
-        from services.constants import OCO_GROUP_NEW_POSITION
-        from services.hyperliquid_services import HyperliquidServices
-        from services.validators import ValidationError
+        from services.constants import OCO_GROUP_NEW_POSITION  # noqa: F401
+        from services.hyperliquid_services import HyperliquidServices  # noqa: F401
+        from services.validators import ValidationError  # noqa: F401
 
         print("✅ 导入检查通过")
+        return True
     except ImportError as e:
         print(f"❌ 导入失败: {e}")
         return False
-    return True
 
 
 def check_hyperliquid_service_imports():
@@ -101,7 +100,7 @@ def main():
     print("\n🔍 开始验证任务完成情况...\n")
 
     checks = [
-        ("模块导入", check_imports),
+        ("模块导入", test_imports),
         ("常量定义", check_constants),
         ("验证器功能", check_validators),
         ("HyperliquidServices 常量使用", check_hyperliquid_service_imports),
@@ -119,7 +118,7 @@ def main():
             print(f"❌ {name} 失败: {e}")
             failed += 1
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"总计: {passed} 通过, {failed} 失败")
 
     if failed == 0:

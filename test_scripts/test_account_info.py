@@ -2,6 +2,7 @@
 """
 测试账户信息获取
 """
+
 import asyncio
 import sys
 from pathlib import Path
@@ -22,7 +23,7 @@ async def test_account_info():
     main.initialize_service()
     config = main.get_config()
 
-    print(f"\n📍 配置信息")
+    print("\n📍 配置信息")
     print("-" * 70)
     print(f"网络: {'测试网 (Testnet)' if config.testnet else '主网 (Mainnet)'}")
     print(f"账户地址: {config.account_address}")
@@ -121,7 +122,7 @@ async def test_account_info():
         print(f"\n交易数量: {total}")
 
         if trade_list:
-            print(f"\n显示最近 10 笔交易:")
+            print("\n显示最近 10 笔交易:")
             print(f"\n{'币种':<8} {'方向':<8} {'数量':<15} {'价格':<15} {'时间':<20}")
             print("-" * 70)
 
@@ -133,7 +134,7 @@ async def test_account_info():
                 time = trade.get("time", "N/A")
 
                 # 格式化时间
-                if time != "N/A" and isinstance(time, (int, float)):
+                if time != "N/A" and isinstance(time, int | float):
                     from datetime import datetime
 
                     dt = datetime.fromtimestamp(time / 1000)

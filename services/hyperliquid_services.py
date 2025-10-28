@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 from hyperliquid.exchange import Exchange
 from hyperliquid.info import Info
@@ -13,11 +13,8 @@ from hyperliquid.utils.signing import (
 from hyperliquid.utils.types import Cloid
 
 from .constants import (
-    ADDRESS_PREFIX_LEN,
-    ADDRESS_SUFFIX_LEN,
     OCO_GROUP_EXISTING_POSITION,
     OCO_GROUP_NEW_POSITION,
-    ORDER_TYPE_LIMIT_GTC,
 )
 
 
@@ -132,7 +129,7 @@ class HyperliquidServices:
         # Post the action
         return self.exchange._post_action(order_action, signature, timestamp)
 
-    async def get_account_balance(self) -> Dict[str, Any]:
+    async def get_account_balance(self) -> dict[str, Any]:
         """Get account balance and margin information"""
         try:
             user_state = self.info.user_state(self.account_address)
@@ -145,7 +142,7 @@ class HyperliquidServices:
             self.logger.error(f"Failed to get account balance: {str(e)}", exc_info=True)
             return {"success": False, "error": str(e)}
 
-    async def get_open_positions(self) -> Dict[str, Any]:
+    async def get_open_positions(self) -> dict[str, Any]:
         """Get all open positions"""
         try:
             user_state = self.info.user_state(self.account_address)
@@ -174,7 +171,7 @@ class HyperliquidServices:
             self.logger.error(f"Failed to get open positions: {str(e)}", exc_info=True)
             return {"success": False, "error": str(e)}
 
-    async def get_open_orders(self) -> Dict[str, Any]:
+    async def get_open_orders(self) -> dict[str, Any]:
         """Get all open orders"""
         try:
             open_orders = self.info.open_orders(self.account_address)
@@ -208,14 +205,14 @@ class HyperliquidServices:
         self,
         coin: str,
         is_buy: bool,
-        sz: Union[str, float],
-        limit_px: Union[str, float],
-        order_type: Optional[Dict[str, Any]] = None,
+        sz: str | float,
+        limit_px: str | float,
+        order_type: dict[str, Any] | None = None,
         reduce_only: bool = False,
-        cloid: Optional[str] = None,
-        tp_px: Optional[Union[str, float]] = None,
-        sl_px: Optional[Union[str, float]] = None,
-    ) -> Dict[str, Any]:
+        cloid: str | None = None,
+        tp_px: str | float | None = None,
+        sl_px: str | float | None = None,
+    ) -> dict[str, Any]:
         """
         Place a single order or bracket order if TP/SL is specified
 
@@ -286,13 +283,13 @@ class HyperliquidServices:
         self,
         coin: str,
         is_buy: bool,
-        sz: Union[str, float],
-        limit_px: Union[str, float],
-        take_profit_px: Union[str, float],
-        stop_loss_px: Union[str, float],
+        sz: str | float,
+        limit_px: str | float,
+        take_profit_px: str | float,
+        stop_loss_px: str | float,
         reduce_only: bool = False,
-        cloid: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        cloid: str | None = None,
+    ) -> dict[str, Any]:
         """
         Place a bracket order using bulk_orders with normalTpSl grouping for proper OCO behavior
 
@@ -394,7 +391,7 @@ class HyperliquidServices:
             self.logger.error(f"Failed to place bracket order for {coin}: {e}")
             return {"success": False, "error": str(e)}
 
-    async def cancel_order(self, coin: str, oid: int) -> Dict[str, Any]:
+    async def cancel_order(self, coin: str, oid: int) -> dict[str, Any]:
         """Cancel a specific order by order ID"""
         try:
             self.logger.info(f"Cancelling order {oid} for {coin}")
@@ -411,7 +408,7 @@ class HyperliquidServices:
             )
             return {"success": False, "error": str(e)}
 
-    async def cancel_order_by_cloid(self, coin: str, cloid: str) -> Dict[str, Any]:
+    async def cancel_order_by_cloid(self, coin: str, cloid: str) -> dict[str, Any]:
         """
         Cancel a specific order by client order ID
 
@@ -436,7 +433,7 @@ class HyperliquidServices:
             )
             return {"success": False, "error": str(e)}
 
-    async def cancel_all_orders(self, coin: Optional[str] = None) -> Dict[str, Any]:
+    async def cancel_all_orders(self, coin: str | None = None) -> dict[str, Any]:
         """Cancel all orders, optionally for a specific coin"""
         try:
             if coin:
@@ -495,9 +492,9 @@ class HyperliquidServices:
         self,
         coin: str,
         oid: int,
-        new_sz: Union[str, float],
-        new_limit_px: Union[str, float],
-    ) -> Dict[str, Any]:
+        new_sz: str | float,
+        new_limit_px: str | float,
+    ) -> dict[str, Any]:
         """Modify an existing order"""
         try:
             self.logger.info(
@@ -534,7 +531,7 @@ class HyperliquidServices:
             )
             return {"success": False, "error": str(e)}
 
-    async def get_market_data(self, coin: str) -> Dict[str, Any]:
+    async def get_market_data(self, coin: str) -> dict[str, Any]:
         """Get market data for a specific coin including bid/ask prices"""
         try:
             all_mids = self.info.all_mids()
@@ -582,7 +579,7 @@ class HyperliquidServices:
             )
             return {"success": False, "error": str(e)}
 
-    async def get_orderbook(self, coin: str, depth: int = 20) -> Dict[str, Any]:
+    async def get_orderbook(self, coin: str, depth: int = 20) -> dict[str, Any]:
         """Get orderbook data for a specific coin"""
         try:
             l2_book = self.info.l2_snapshot(coin)
@@ -608,7 +605,7 @@ class HyperliquidServices:
 
     async def update_leverage(
         self, coin: str, leverage: int, is_cross: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Update leverage for a coin"""
         try:
             # Validate inputs
@@ -658,8 +655,8 @@ class HyperliquidServices:
             return {"success": False, "error": str(e)}
 
     async def transfer_between_spot_and_perp(
-        self, amount: Union[str, float], to_perp: bool = True
-    ) -> Dict[str, Any]:
+        self, amount: str | float, to_perp: bool = True
+    ) -> dict[str, Any]:
         """Transfer funds between spot and perpetual accounts"""
         try:
             direction = "spot to perp" if to_perp else "perp to spot"
@@ -681,7 +678,7 @@ class HyperliquidServices:
             self.logger.error(f"Failed to transfer {amount}: {str(e)}", exc_info=True)
             return {"success": False, "error": str(e)}
 
-    async def get_funding_history(self, coin: str, days: int = 7) -> Dict[str, Any]:
+    async def get_funding_history(self, coin: str, days: int = 7) -> dict[str, Any]:
         """Get funding history for a coin"""
         try:
             end_time = int(time.time() * 1000)
@@ -701,7 +698,7 @@ class HyperliquidServices:
             )
             return {"success": False, "error": str(e)}
 
-    async def get_trade_history(self, days: int = 7) -> Dict[str, Any]:
+    async def get_trade_history(self, days: int = 7) -> dict[str, Any]:
         """Get trade history for the account"""
         try:
             user_fills = self.info.user_fills(self.account_address)
@@ -741,10 +738,10 @@ class HyperliquidServices:
     async def set_position_tpsl(
         self,
         coin: str,
-        tp_px: Optional[Union[str, float]] = None,
-        sl_px: Optional[Union[str, float]] = None,
-        position_size: Optional[Union[str, float]] = None,
-    ) -> Dict[str, Any]:
+        tp_px: str | float | None = None,
+        sl_px: str | float | None = None,
+        position_size: str | float | None = None,
+    ) -> dict[str, Any]:
         """
         Set take profit and/or stop loss for an existing position using bulk_orders with positionTpSl grouping for proper OCO behavior
 
@@ -877,9 +874,9 @@ class HyperliquidServices:
         self,
         coin: str,
         is_buy: bool,
-        sz: Union[str, float],
-        cloid: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        sz: str | float,
+        cloid: str | None = None,
+    ) -> dict[str, Any]:
         """
         Open a new position at market price
 
@@ -924,10 +921,10 @@ class HyperliquidServices:
     async def market_close_position(
         self,
         coin: str,
-        sz: Optional[float] = None,
-        cloid: Optional[str] = None,
+        sz: float | None = None,
+        cloid: str | None = None,
         slippage: float = 0.001,  # 0.1% default slippage
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Close an existing position by placing a reverse market order with reduce_only=True
 
@@ -1006,7 +1003,7 @@ class HyperliquidServices:
         coin: str,
         is_buy: bool,
         slippage: float,
-        px: Optional[float] = None,
+        px: float | None = None,
     ) -> float:
         """
         Calculate slippage price using HyperLiquid SDK logic

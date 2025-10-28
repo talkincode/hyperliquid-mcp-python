@@ -1,21 +1,17 @@
 # Pre-commit hooks 配置
-# 安装: uv run pre-commit install
+# 安装: uv run pre-commit install (或 make pre-commit 运行检查)
 # 运行: uv run pre-commit run --all-files
 
 repos:
-  # Black - Python 代码格式化
-  - repo: https://github.com/psf/black
-    rev: 24.10.0
+  # Ruff - 现代化的 Python linter 和 formatter (替代 black + isort + flake8)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
     hooks:
-      - id: black
-        language_version: python3.12
-
-  # isort - Import 排序
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-        args: ["--profile", "black"]
+      # Ruff linter - 代码检查和自动修复
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      # Ruff formatter - 代码格式化 (替代 black)
+      - id: ruff-format
 
   # 基础检查
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -30,10 +26,3 @@ repos:
       - id: check-toml               # 检查 TOML 语法
       - id: mixed-line-ending        # 统一行尾格式
         args: ['--fix=lf']
-
-  # Ruff - 快速 Python linter
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.4
-    hooks:
-      - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]

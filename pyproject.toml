@@ -35,8 +35,7 @@ Documentation = "https://github.com/talkincode/hyperliquid-mcp-python#readme"
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
-    "black>=22.0",
-    "isort>=5.0",
+    "ruff>=0.8.0",
 ]
 
 [project.scripts]
@@ -59,12 +58,10 @@ packages = ["services"]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21.0",
-    "black>=22.0",
-    "isort>=5.0",
+    "ruff>=0.8.0",
     "build>=1.3.0",
     "twine>=6.2.0",
     "pre-commit>=3.5.0",
-    "ruff>=0.8.0",
 ]
 
 [tool.pytest.ini_options]
@@ -74,35 +71,6 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
 asyncio_mode = "auto"
-
-[tool.black]
-line-length = 88
-target-version = ['py310', 'py311', 'py312', 'py313']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-  # 默认排除的目录
-  \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
-
-[tool.isort]
-profile = "black"
-line_length = 88
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-ensure_newline_before_comments = true
-skip_gitignore = true
 
 [tool.ruff]
 line-length = 88
@@ -133,3 +101,13 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]  # unused imports in __init__.py
+
+[tool.ruff.format]
+# 使用双引号
+quote-style = "double"
+# 缩进使用空格
+indent-style = "space"
+# 保留魔术逗号
+skip-magic-trailing-comma = false
+# 行尾使用 LF
+line-ending = "lf"

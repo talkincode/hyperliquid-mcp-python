@@ -2,8 +2,8 @@
 """
 检查所有账户余额（现货 + 合约）
 """
+
 import asyncio
-import json
 import sys
 from pathlib import Path
 
@@ -113,8 +113,8 @@ async def check_all_balances():
                 print("   工具名: transfer_between_spot_and_perp")
                 print(f"   参数: amount={total_value_usd}, to_perp=True")
                 print("\n或运行命令:")
-                print(f"   uv run python -c 'import asyncio; import main; ")
-                print(f"   main.initialize_service(); ")
+                print("   uv run python -c 'import asyncio; import main; ")
+                print("   main.initialize_service(); ")
                 print(
                     f"   asyncio.run(main.hyperliquid_service.transfer_between_spot_and_perp({total_value_usd}, True))'"
                 )
