@@ -603,6 +603,137 @@ class HyperliquidServices:
             )
             return {"success": False, "error": str(e)}
 
+    async def get_candles_snapshot_bulk(
+        self,
+        coins: list[str],
+        interval: str,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        days: int | None = None,
+    ) -> dict[str, Any]:
+        """
+        Retrieve candlestick data for multiple coins in a single call
+
+        Args:
+            coins: List of trading pairs (e.g., ["BTC", "ETH"])
+            interval: Candlestick interval string accepted by HyperLiquid
+            start_time: Optional start timestamp (ms). Required when days is None.
+            end_time: Optional end timestamp (ms). Defaults to current time when omitted.
+            days: Optional number of recent days to fetch. Mutually exclusive with start/end.
+        """
+
+        try:
+            if not isinstance(coins, list) or not coins:
+                raise ValueError("coins must be a non-empty list of strings")
+
+            normalized_coins: list[str] = []
+            for coin in coins:
+                if not coin or not isinstance(coin, str):
+                    raise ValueError("each coin must be a non-empty string")
+                coin_clean = coin.strip()
+                if not coin_clean:
+                    raise ValueError("each coin must be a non-empty string")
+                if coin_clean not in normalized_coins:
+                    normalized_coins.append(coin_clean)
+
+            if not interval or not isinstance(interval, str):
+                raise ValueError("interval must be a non-empty string")
+            interval = interval.strip()
+            if not interval:
+                raise ValueError("interval must be a non-empty string")
+
+            if days is not None and (start_time is not None or end_time is not None):
+                raise ValueError(
+                    "days cannot be used together with start_time or end_time"
+                )
+
+            current_time_ms = int(time.time() * 1000)
+
+            if days is not None:
+                if not isinstance(days, int) or days <= 0:
+                    raise ValueError("days must be a positive integer")
+                effective_end = current_time_ms if end_time is None else int(end_time)
+                effective_start = effective_end - (days * 24 * 60 * 60 * 1000)
+            else:
+                if start_time is None:
+                    raise ValueError("start_time is required when days is not provided")
+                effective_start = int(start_time)
+                effective_end = (
+                    int(end_time) if end_time is not None else current_time_ms
+                )
+
+            if effective_start >= effective_end:
+                raise ValueError("start_time must be less than end_time")
+
+            candles_by_coin: dict[str, list[dict[str, Any]]] = {}
+            coin_errors: dict[str, str] = {}
+
+            for coin in normalized_coins:
+                try:
+                    raw_candles = self.info.candles_snapshot(
+                        coin,
+                        interval,
+                        effective_start,
+                        effective_end,
+                    )
+
+                    formatted_candles: list[dict[str, Any]] = []
+                    for candle in raw_candles or []:
+                        timestamp = candle.get("t") or candle.get("T")
+                        if timestamp is None:
+                            # Skip malformed entries without timestamp
+                            continue
+
+                        try:
+                            formatted_candles.append(
+                                {
+                                    "timestamp": int(timestamp),
+                                    "open": float(candle["o"]),
+                                    "high": float(candle["h"]),
+                                    "low": float(candle["l"]),
+                                    "close": float(candle["c"]),
+                                    "volume": float(candle["v"]),
+                                    "trade_count": int(candle.get("n", 0)),
+                                }
+                            )
+                        except (KeyError, TypeError, ValueError) as format_error:
+                            self.logger.warning(
+                                "Skipping malformed candle for %s: %s",
+                                coin,
+                                format_error,
+                            )
+
+                    formatted_candles.sort(key=lambda item: item["timestamp"])
+                    candles_by_coin[coin] = formatted_candles
+                except Exception as coin_error:
+                    coin_errors[coin] = str(coin_error)
+                    self.logger.error(
+                        "Failed to fetch candles for %s: %s", coin, coin_error
+                    )
+
+            if not candles_by_coin:
+                return {
+                    "success": False,
+                    "error": "Failed to fetch candle data for requested coins",
+                    "coin_errors": coin_errors,
+                }
+
+            response: dict[str, Any] = {
+                "success": True,
+                "data": candles_by_coin,
+                "interval": interval,
+                "start_time": effective_start,
+                "end_time": effective_end,
+            }
+
+            if coin_errors:
+                response["coin_errors"] = coin_errors
+
+            return response
+        except Exception as e:
+            self.logger.error("Failed to get candles snapshot bulk: %s", e)
+            return {"success": False, "error": str(e)}
+
     async def update_leverage(
         self, coin: str, leverage: int, is_cross: bool = True
     ) -> dict[str, Any]:

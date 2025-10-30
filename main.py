@@ -6,10 +6,11 @@ from typing import Any
 
 from dotenv import load_dotenv
 from fastmcp import FastMCP
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+from pydantic import ValidationError as PydanticValidationError
 
 from services.hyperliquid_services import HyperliquidServices
-from services.validators import ValidationError, validate_order_inputs
+from services.validators import ValidationError, validate_coin, validate_order_inputs
 
 # Load environment variables
 load_dotenv()
@@ -82,6 +83,53 @@ def initialize_service():
         )
         account_info = config.account_address or "Derived from private key"
         logger.info(f"Service initialized for account: {account_info}")
+
+
+class CandlesSnapshotParams(BaseModel):
+    """Bulk candles snapshot request parameters"""
+
+    coins: list[str] = Field(..., min_length=1, description="List of trading pairs")
+    interval: str = Field(
+        ..., description="Candlestick interval supported by HyperLiquid"
+    )
+    start_time: int | None = Field(
+        default=None,
+        description="Start timestamp in milliseconds",
+    )
+    end_time: int | None = Field(
+        default=None,
+        description="End timestamp in milliseconds",
+    )
+    days: int | None = Field(
+        default=None,
+        gt=0,
+        description="Fetch recent N days (mutually exclusive with start/end)",
+    )
+    limit: int | None = Field(
+        default=None,
+        gt=0,
+        le=5000,
+        description="Maximum number of candles per coin (latest N records)",
+    )
+
+    @model_validator(mode="after")
+    def validate_time_params(self):
+        if self.days is not None and (
+            self.start_time is not None or self.end_time is not None
+        ):
+            raise ValueError("days cannot be used together with start_time or end_time")
+
+        if self.days is None and self.start_time is None:
+            raise ValueError("start_time is required when days is not provided")
+
+        if (
+            self.start_time is not None
+            and self.end_time is not None
+            and self.start_time >= self.end_time
+        ):
+            raise ValueError("start_time must be less than end_time")
+
+        return self
 
 
 # Account Management Tools
@@ -370,6 +418,103 @@ async def get_orderbook(coin: str, depth: int = 20) -> dict[str, Any]:
 
 
 @mcp.tool
+async def get_candles_snapshot(
+    coins: list[str],
+    interval: str,
+    start_time: int | None = None,
+    end_time: int | None = None,
+    days: int | None = None,
+    limit: int | None = None,
+) -> dict[str, Any]:
+    """
+    Fetch candlestick (OHLCV) data for multiple coins in one request
+
+    Args:
+        coins: List of trading pairs (e.g., ["BTC", "ETH"])
+        interval: Candlestick interval supported by HyperLiquid (e.g., "1m", "1h")
+        start_time: Start timestamp in milliseconds (required when days not provided)
+        end_time: End timestamp in milliseconds (defaults to now when omitted)
+        days: Number of recent days to fetch (mutually exclusive with start/end)
+        limit: Optional max number of candles per coin (latest N samples)
+    """
+
+    initialize_service()
+
+    try:
+        params = CandlesSnapshotParams(
+            coins=coins,
+            interval=interval,
+            start_time=start_time,
+            end_time=end_time,
+            days=days,
+            limit=limit,
+        )
+    except PydanticValidationError as validation_error:
+        return {
+            "success": False,
+            "error": f"Invalid input: {validation_error.errors()}",
+            "error_code": "VALIDATION_ERROR",
+        }
+    except ValueError as validation_error:
+        return {
+            "success": False,
+            "error": f"Invalid input: {str(validation_error)}",
+            "error_code": "VALIDATION_ERROR",
+        }
+
+    # Validate each coin using existing validator for consistency
+    for coin in params.coins:
+        try:
+            validate_coin(coin)
+        except ValidationError as validation_error:
+            return {
+                "success": False,
+                "error": f"Invalid input: {str(validation_error)}",
+                "error_code": "VALIDATION_ERROR",
+            }
+
+    service_result = await hyperliquid_service.get_candles_snapshot_bulk(
+        coins=params.coins,
+        interval=params.interval,
+        start_time=params.start_time,
+        end_time=params.end_time,
+        days=params.days,
+    )
+
+    if not service_result.get("success"):
+        return service_result
+
+    candles_data = service_result.get("data", {})
+    applied_limit = params.limit or None
+
+    if applied_limit is not None:
+        limited_data = {}
+        for coin, candles in candles_data.items():
+            if not isinstance(candles, list):
+                limited_data[coin] = candles
+                continue
+            limited_data[coin] = candles[-applied_limit:]
+        candles_data = limited_data
+
+    response: dict[str, Any] = {
+        "success": True,
+        "data": candles_data,
+        "interval": service_result.get("interval"),
+        "start_time": service_result.get("start_time"),
+        "end_time": service_result.get("end_time"),
+        "requested_coins": params.coins,
+    }
+
+    if applied_limit is not None:
+        response["limit_per_coin"] = applied_limit
+
+    if service_result.get("coin_errors"):
+        response["coin_errors"] = service_result["coin_errors"]
+
+    return response
+
+
+@mcp.tool
 async def get_funding_history(coin: str, days: int = 7) -> dict[str, Any]:
     """
     Get funding history for a coin
@@ -635,6 +780,23 @@ def start_server():
             os.path.dirname(os.path.abspath(__file__)), "hyperliquid_mcp.log"
         )
         logger.info(f"Logs will be written to: {log_path}")
+
+        # Log all registered tools BEFORE starting server
+        if hasattr(mcp, "_tool_manager") and hasattr(mcp._tool_manager, "_tools"):
+            tools_dict = mcp._tool_manager._tools
+            tool_names = sorted(tools_dict.keys())
+
+            print("\n" + "=" * 60)
+            print(f"✅ {len(tool_names)} MCP Tools Registered:")
+            print("=" * 60)
+
+            for i, tool_name in enumerate(tool_names, 1):
+                marker = "🆕" if tool_name == "get_candles_snapshot" else "  "
+                print(f"{marker} {i:2d}. {tool_name}")
+
+            print("=" * 60 + "\n")
+        else:
+            print("\n⚠️  Cannot verify tool registration\n")
 
         asyncio.run(run_as_server())
     except Exception as e:
